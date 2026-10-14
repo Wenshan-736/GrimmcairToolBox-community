@@ -1,0 +1,86 @@
+<UserControl x:Class="Grimmcair.Desktop.Views.GuideSkillPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="clr-namespace:Grimmcair.Desktop.Views"
+             xmlns:services="clr-namespace:Grimmcair.Desktop.Services"
+             FontFamily="Microsoft YaHei UI, Microsoft YaHei, Segoe UI" FontSize="13">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Theme.xaml" /></ResourceDictionary.MergedDictionaries>
+            <services:ResourceImageConverter x:Key="GuideImage" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+        <StackPanel>
+            <ListBox x:Name="SkillList" SelectionChanged="SkillList_SelectionChanged"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto"
+                     AutomationProperties.Name="选择技能">
+                <ListBox.Style><Style TargetType="ListBox" BasedOn="{StaticResource {x:Type ListBox}}"><Setter Property="MaxHeight" Value="146" /><Style.Triggers><DataTrigger Binding="{Binding IsCompact, RelativeSource={RelativeSource AncestorType={x:Type views:GuideSkillPanel}}}" Value="True"><Setter Property="MaxHeight" Value="112" /></DataTrigger></Style.Triggers></Style></ListBox.Style>
+                <ListBox.ItemContainerStyle><Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}"><Setter Property="Padding" Value="8,8" /><Style.Triggers><DataTrigger Binding="{Binding IsCompact, RelativeSource={RelativeSource AncestorType={x:Type views:GuideSkillPanel}}}" Value="True"><Setter Property="Padding" Value="6,5" /></DataTrigger></Style.Triggers></Style></ListBox.ItemContainerStyle>
+                <ListBox.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ListBox.ItemsPanel>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Width="86">
+                            <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="1" Padding="3" HorizontalAlignment="Center" Background="#E5CCA2">
+                                <Border.Style><Style TargetType="Border"><Setter Property="Width" Value="58" /><Setter Property="Height" Value="58" /><Style.Triggers><DataTrigger Binding="{Binding IsCompact, RelativeSource={RelativeSource AncestorType={x:Type views:GuideSkillPanel}}}" Value="True"><Setter Property="Width" Value="40" /><Setter Property="Height" Value="40" /></DataTrigger></Style.Triggers></Style></Border.Style>
+                                <Grid>
+                                    <Image Source="{Binding Icon, Converter={StaticResource GuideImage}}" Stretch="Uniform" />
+                                    <TextBlock Text="◇" FontSize="29" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="图标待补充" AutomationProperties.Name="图标待补充">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers><DataTrigger Binding="{Binding Icon, Converter={StaticResource GuideImage}}" Value="{x:Null}"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                            </Border>
+                            <TextBlock Text="{Binding KeyLabel}" HorizontalAlignment="Center" FontWeight="SemiBold" Margin="0,5,0,0" />
+                            <TextBlock Text="{Binding Name}" TextAlignment="Center" TextWrapping="Wrap" Margin="0,4,0,0" FontSize="12" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <TextBlock x:Name="EmptyText" Text="技能资料待补充" Style="{StaticResource MutedText}" Visibility="Collapsed" Margin="0,4,0,12" />
+        </StackPanel>
+        <WrapPanel x:Name="ReadingNavigation" Grid.Row="1" Visibility="Collapsed">
+            <WrapPanel.Style><Style TargetType="WrapPanel"><Setter Property="Margin" Value="0,9,0,0" /><Style.Triggers><DataTrigger Binding="{Binding IsCompact, RelativeSource={RelativeSource AncestorType={x:Type views:GuideSkillPanel}}}" Value="True"><Setter Property="Margin" Value="0,5,0,0" /></DataTrigger></Style.Triggers></Style></WrapPanel.Style>
+            <Button x:Name="DiagramsJump" Content="机制示意 ↓" Click="DiagramsJump_Click" Padding="9,4" MinHeight="29" FontSize="12" Margin="0,0,7,0" />
+            <Button x:Name="ExamplesJump" Content="示例数值 ↓" Click="ExamplesJump_Click" Padding="9,4" MinHeight="29" FontSize="12" Margin="0,0,7,0" />
+            <Button x:Name="FormulaJump" Content="公式 ↓" Click="FormulaJump_Click" Padding="9,4" MinHeight="29" FontSize="12" />
+        </WrapPanel>
+        <ScrollViewer x:Name="DetailScroll" Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,8,0">
+            <ScrollViewer.Style><Style TargetType="ScrollViewer"><Setter Property="Margin" Value="0,12,0,0" /><Style.Triggers><DataTrigger Binding="{Binding IsCompact, RelativeSource={RelativeSource AncestorType={x:Type views:GuideSkillPanel}}}" Value="True"><Setter Property="Margin" Value="0,8,0,0" /></DataTrigger></Style.Triggers></Style></ScrollViewer.Style>
+            <StackPanel x:Name="DetailPanel">
+                <DockPanel Margin="0,0,0,15">
+                    <Button x:Name="DetailsJump" DockPanel.Dock="Right" Content="详细机制 ↓" Click="DetailsJump_Click" Padding="10,5" Margin="12,0,0,0" VerticalAlignment="Center" />
+                    <TextBlock x:Name="SkillNameText" FontSize="21" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap" />
+                </DockPanel>
+                <TextBlock Text="基础信息" Style="{StaticResource SectionLabel}" />
+                <Border x:Name="RangeSummary" Background="{StaticResource PaperLightBrush}" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,0,10" Visibility="Collapsed">
+                    <StackPanel><TextBlock Text="作用范围" FontWeight="SemiBold" Margin="0,0,0,3" /><TextBlock x:Name="RangeText" TextWrapping="Wrap" LineHeight="24" /></StackPanel>
+                </Border>
+                <TextBlock x:Name="BasicText" TextWrapping="Wrap" LineHeight="24" />
+                <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,20,0,18" />
+                <TextBlock x:Name="DetailsHeading" Text="详细机制" Style="{StaticResource SectionLabel}" />
+                <Border x:Name="OverviewCard" Background="{StaticResource PaperLightBrush}" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="8" Padding="14,12" Margin="0,0,0,14" Visibility="Collapsed">
+                    <StackPanel><TextBlock Text="先看要点" FontWeight="SemiBold" Margin="0,0,0,6" /><TextBlock x:Name="OverviewText" TextWrapping="Wrap" LineHeight="24" /></StackPanel>
+                </Border>
+                <StackPanel x:Name="ReadingSectionsPanel" />
+                <TextBlock x:Name="DetailsText" TextWrapping="Wrap" LineHeight="24" MinHeight="42" />
+                <StackPanel x:Name="DiagramsPanel" Visibility="Collapsed" Margin="0,4,0,14">
+                    <TextBlock Text="机制示意" Style="{StaticResource SectionLabel}" />
+                    <WrapPanel x:Name="DiagramCards" />
+                </StackPanel>
+                <StackPanel x:Name="ExamplesPanel" Visibility="Collapsed" Margin="0,4,0,14">
+                    <TextBlock Text="代入数值看一看" Style="{StaticResource SectionLabel}" />
+                    <StackPanel x:Name="ExampleCards" />
+                </StackPanel>
+                <Expander x:Name="FormulaExpander" Header="公式与计算条件" IsExpanded="False" Visibility="Collapsed" Foreground="{StaticResource InkBrush}" Margin="0,4,0,16">
+                    <StackPanel x:Name="FormulaCards" Margin="0,12,0,0" />
+                </Expander>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

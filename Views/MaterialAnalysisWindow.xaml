@@ -1,0 +1,83 @@
+<Window x:Class="Grimmcair.Desktop.Views.MaterialAnalysisWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:services="clr-namespace:Grimmcair.Desktop.Services"
+        Title="装备目标 · 材料分析" Width="1120" Height="790" MinWidth="850" MinHeight="600"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False" Background="#E4D1AA"
+        FontFamily="Microsoft YaHei UI" FontSize="13" UseLayoutRounding="True" SizeChanged="AnalysisWindow_SizeChanged">
+    <Window.Resources><ResourceDictionary>
+        <ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Theme.xaml" /></ResourceDictionary.MergedDictionaries>
+        <services:ResourceImageConverter x:Key="ItemImage" />
+    </ResourceDictionary></Window.Resources>
+    <Grid Margin="18" Background="#E4D1AA">
+        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+        <Border x:Name="HeaderPanel" Style="{StaticResource PaperPanel}" Padding="16,10" Margin="0,0,0,8">
+            <StackPanel>
+                <DockPanel><Button DockPanel.Dock="Right" Content="读取最新存档" Click="Refresh_Click" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" />
+                    <StackPanel><TextBlock Text="装备目标 · 材料分析" FontSize="21" FontWeight="SemiBold" /><TextBlock x:Name="SaveTitle" Style="{StaticResource MutedText}" Margin="0,3,12,0" /></StackPanel>
+                </DockPanel>
+                <ScrollViewer x:Name="TargetScroller" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" MaxHeight="40" Margin="0,7,0,0">
+                    <WrapPanel x:Name="TargetItems" />
+                </ScrollViewer>
+            </StackPanel>
+        </Border>
+        <Border Grid.Row="1" Style="{StaticResource PaperPanel}" Padding="14,12">
+            <Grid><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                <DockPanel Margin="0,0,0,8">
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                        <CheckBox x:Name="MissingOnly" Content="只看缺少" IsChecked="True" VerticalAlignment="Center" Margin="0,0,18,0" Checked="Filter_Changed" Unchecked="Filter_Changed" />
+                        <ComboBox x:Name="StageFilter" Width="140" SelectionChanged="Filter_Changed" AutomationProperties.Name="材料阶段筛选" />
+                    </StackPanel>
+                    <WrapPanel x:Name="ViewButtons">
+                        <Button Content="全部目标材料缺口" Tag="materials" Click="View_Click" Margin="0,0,6,0" />
+                        <Button Content="合成路线" Tag="steps" Click="View_Click" Margin="0,0,6,0" />
+                        <Button Content="已持有抵扣" Tag="allocations" Click="View_Click" />
+                    </WrapPanel>
+                </DockPanel>
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" MaxHeight="60" Margin="0,0,0,8"><TextBlock x:Name="PlanSummary" TextWrapping="Wrap" Foreground="#8B4D28" /></ScrollViewer>
+                <Expander x:Name="BranchExpander" Grid.Row="2" Header="可选材料" IsExpanded="False" Visibility="Collapsed" Foreground="{StaticResource InkBrush}" Margin="0,0,0,6">
+                    <Border Background="#F9EDCE" BorderBrush="#CEAF7C" BorderThickness="1" CornerRadius="5" Padding="9,5">
+                        <ScrollViewer MaxHeight="76" VerticalScrollBarVisibility="Auto"><StackPanel x:Name="BranchRows" /></ScrollViewer>
+                    </Border>
+                </Expander>
+                <DataGrid x:Name="MaterialRows" Grid.Row="3" RowHeight="NaN" MinRowHeight="56" SelectionChanged="MaterialRows_SelectionChanged" AutomationProperties.Name="全部目标材料缺口与库存抵扣">
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Header="物品" Width="2*" MinWidth="190"><DataGridTemplateColumn.CellTemplate><DataTemplate>
+                            <StackPanel Orientation="Horizontal" Margin="2,5"><Image Source="{Binding Icon, Converter={StaticResource ItemImage}}" Width="34" Height="34" Margin="0,0,10,0" />
+                                <StackPanel VerticalAlignment="Center"><TextBlock Text="{Binding Name}" TextWrapping="Wrap" /><TextBlock Text="{Binding Stage}" Style="{StaticResource MutedText}" /></StackPanel>
+                            </StackPanel>
+                        </DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
+                        <DataGridTextColumn Header="需求" Binding="{Binding Required}" Width="94" MinWidth="94"><DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="TextWrapping" Value="Wrap" /><Setter Property="TextAlignment" Value="Center" /><Setter Property="VerticalAlignment" Value="Center" /><Setter Property="Margin" Value="5,4" /></Style></DataGridTextColumn.ElementStyle></DataGridTextColumn>
+                        <DataGridTextColumn Header="当前档持有" Binding="{Binding Owned}" Width="94" MinWidth="94"><DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="TextWrapping" Value="Wrap" /><Setter Property="TextAlignment" Value="Center" /><Setter Property="VerticalAlignment" Value="Center" /><Setter Property="Margin" Value="5,4" /></Style></DataGridTextColumn.ElementStyle></DataGridTextColumn>
+                        <DataGridTextColumn Header="共用抵扣" Binding="{Binding Allocated}" Width="94" MinWidth="94"><DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="TextWrapping" Value="Wrap" /><Setter Property="TextAlignment" Value="Center" /><Setter Property="VerticalAlignment" Value="Center" /><Setter Property="Margin" Value="5,4" /></Style></DataGridTextColumn.ElementStyle></DataGridTextColumn>
+                        <DataGridTemplateColumn Header="总体还缺" Width="102" MinWidth="102"><DataGridTemplateColumn.CellTemplate><DataTemplate>
+                            <TextBlock Text="{Binding Missing}" VerticalAlignment="Center" Margin="5,4" TextAlignment="Center" TextWrapping="Wrap" FontWeight="SemiBold"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Foreground" Value="#AD382C" /><Style.Triggers><DataTrigger Binding="{Binding Missing}" Value="0"><Setter Property="Foreground" Value="#347344" /></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock>
+                        </DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
+                        <DataGridTextColumn x:Name="MaterialSummaryColumn" Header="用途与状态" Binding="{Binding Summary}" Width="2*"><DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="TextWrapping" Value="Wrap" /><Setter Property="Margin" Value="8,4" /></Style></DataGridTextColumn.ElementStyle></DataGridTextColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+                <Grid x:Name="SynthesisPanel" Grid.Row="3" Visibility="Collapsed">
+                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                    <StackPanel Margin="0,0,0,8">
+                        <DockPanel x:Name="TreeSchemeSelector" Margin="0,0,0,5">
+                            <TextBlock Text="查看不同已核路线：" VerticalAlignment="Center" Margin="0,0,10,0" />
+                            <ComboBox x:Name="TreeSchemeBox" Width="220" HorizontalAlignment="Left" DisplayMemberPath="Label" SelectionChanged="TreeScheme_Changed" AutomationProperties.Name="查看合成树完整组合" />
+                        </DockPanel>
+                        <TextBlock x:Name="TreeExplanation" TextWrapping="Wrap" Style="{StaticResource MutedText}" />
+                    </StackPanel>
+                    <TreeView x:Name="SynthesisRoots" Grid.Row="1" Background="#F9EDCE" BorderBrush="#CEAF7C" BorderThickness="1" Padding="8"
+                              ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="False"
+                              SelectedItemChanged="SynthesisSelection_Changed" AutomationProperties.Name="目标装备合成树" />
+                </Grid>
+                <Grid Grid.Row="4" MaxHeight="56" Margin="0,6,0,0"><Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <ScrollViewer MaxHeight="56" VerticalScrollBarVisibility="Auto" Margin="0,0,14,0"><TextBlock x:Name="RowDetails" Style="{StaticResource MutedText}" LineHeight="18" Text="选择材料可查看用途路径、获取信息与合成限制。" /></ScrollViewer>
+                    <Button x:Name="OpenItemButton" Grid.Column="1" Content="查看物品信息 →" Click="OpenItem_Click" IsEnabled="False" VerticalAlignment="Top" />
+                </Grid>
+            </Grid>
+        </Border>
+        <DockPanel Grid.Row="2" Margin="0,9,0,0"><Button DockPanel.Dock="Right" Content="关闭" IsCancel="True" Click="Close_Click" MinWidth="90" Margin="16,0,0,0" />
+            <TextBlock Text="缺口是全部目标共用当前档库存后的总体需求。共同材料全部需要，再从每组选一个完整方案；同组方案不能混选。树仅示意合成路线，衣柜前置可复用。" Style="{StaticResource MutedText}" FontSize="11" LineHeight="17" VerticalAlignment="Center"
+                       ToolTip="衣柜前置只需持有、可以复用；未收录前置的物品停止展开。实际合成仍须满足等级、解锁与消耗条件，分析结果不代表游戏内已满足全部条件。" />
+        </DockPanel>
+    </Grid>
+</Window>

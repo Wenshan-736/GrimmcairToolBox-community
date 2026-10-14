@@ -1,0 +1,68 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Configurations>Debug;Release</Configurations>
+    <PlatformTarget>x64</PlatformTarget>
+    <AssemblyName>Grimmcair.Assistant</AssemblyName>
+    <AssemblyName Condition="'$(Configuration)' == 'Production' Or '$(Configuration)' == 'Release'">GrimmcairToolBox</AssemblyName>
+    <DesktopEdition Condition="'$(DesktopEdition)' == ''">Community</DesktopEdition>
+    <ResourcePackPath Condition="'$(ResourcePackPath)' == ''">Data/resources.gcpak</ResourcePackPath>
+    <SaveParserPath Condition="'$(SaveParserPath)' == ''">Dependencies/Grimmcair.SaveParser.dll</SaveParserPath>
+    <RootNamespace>Grimmcair.Desktop</RootNamespace>
+    <Version>0.1.8</Version>
+    <Product>格林姆迦尔的妙妙工具箱</Product>
+    <Product Condition="'$(DesktopEdition)' == 'Community'">格林姆迦尔的妙妙工具箱·社区版</Product>
+    <Product Condition="'$(DesktopEdition)' == 'Dedicated'">格林姆迦尔的妙妙工具箱·专用版</Product>
+    <Description>地图资料、存档解析与材料计算</Description>
+    <ApplicationIcon>Assets/app.ico</ApplicationIcon>
+    <ApplicationManifest>app.preview.manifest</ApplicationManifest>
+    <ApplicationManifest Condition="'$(Configuration)' == 'Production' Or '$(Configuration)' == 'Release'">app.production.manifest</ApplicationManifest>
+    <DebugType>embedded</DebugType>
+    <DebugType Condition="'$(Configuration)' == 'Production' Or '$(Configuration)' == 'Release'">none</DebugType>
+    <DebugSymbols Condition="'$(Configuration)' == 'Production' Or '$(Configuration)' == 'Release'">false</DebugSymbols>
+    <NuGetAudit>false</NuGetAudit>
+    <DefineConstants Condition="'$(DesktopEdition)' == 'Community'">$(DefineConstants);DESKTOP_COMMUNITY</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(KnowledgeMcp)' == 'true'">
+    <OutputType>Exe</OutputType>
+    <UseWPF>false</UseWPF>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
+    <AssemblyName>Grimmcair.KnowledgeMcp</AssemblyName>
+    <ApplicationManifest>app.preview.manifest</ApplicationManifest>
+    <StartupObject>Grimmcair.Desktop.McpProgram</StartupObject>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(KnowledgeMcp)' != 'true'">
+    <None Update="ThirdPartyNotices/Markdig.LICENSE.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Update="scripts/start-with-diagnostics.ps1;scripts/start-with-diagnostics.cmd" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Markdig" Version="1.4.0" />
+    <Compile Remove=".build/**;dist/**;verification/**;tests/**;obj/**;bin/**;Internal/**;artifacts/**" />
+    <Compile Remove="McpProgram.cs" Condition="'$(KnowledgeMcp)' != 'true'" />
+    <Compile Remove="MainWindow.AiChat.Smoke.cs;MainWindow.KnowledgePreview.cs" Condition="'$(Configuration)' != 'Preview' And '$(Configuration)' != 'Debug'" />
+    <None Remove="Data/**;Assets/**;.build/**;dist/**;verification/**;UserData/**;Internal/**;Dependencies/**;artifacts/**" />
+    <Resource Include="Assets/*.png" Condition="'$(KnowledgeMcp)' != 'true'" />
+    <EmbeddedResource Include="$(ResourcePackPath)" LogicalName="Grimmcair.Resources.gcpak" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(KnowledgeMcp)' != 'true'">
+    <Reference Include="Grimmcair.SaveParser">
+      <HintPath>$(SaveParserPath)</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup Condition="'$(KnowledgeMcp)' == 'true'">
+    <Compile Include="McpProgram.cs;Services/ResourcePack.cs;Services/Knowledge*.cs;Services/AiKnowledge*.cs;Services/AiToolDefinition.cs;Services/DesktopDataPaths.cs;Services/DesktopInstallationSession.cs" />
+  </ItemGroup>
+  <Target Name="ValidateDesktopEdition" BeforeTargets="PrepareForBuild">
+    <Error Condition="'$(DesktopEdition)' != 'Community'" Text="This public source builds the Community edition only." />
+  </Target>
+  <Target Name="ValidateCommunityBinaryDependencies" BeforeTargets="PrepareForBuild">
+    <Error Condition="!Exists('$(ResourcePackPath)')" Text="Missing Data/resources.gcpak. Copy it from the matching community installation; see the public README." />
+    <Error Condition="'$(KnowledgeMcp)' != 'true' And '$(UseInternalSaveParser)' != 'true' And !Exists('$(SaveParserPath)')" Text="Missing Dependencies/Grimmcair.SaveParser.dll. Copy Grimmcair.SaveParser.dll from the matching community installation; see the public README." />
+  </Target>
+</Project>

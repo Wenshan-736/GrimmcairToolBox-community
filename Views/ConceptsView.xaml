@@ -1,0 +1,122 @@
+<UserControl x:Class="Grimmcair.Desktop.Views.ConceptsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="clr-namespace:Grimmcair.Desktop.Views"
+             FontFamily="Microsoft YaHei UI, Microsoft YaHei, Segoe UI" FontSize="13"
+             UseLayoutRounding="True" SizeChanged="View_SizeChanged">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Theme.xaml" /></ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid Background="#E4D1AA">
+        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+        <Border Style="{StaticResource PaperPanel}" Padding="16,11" Margin="0,0,0,10">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <TextBlock x:Name="ConceptPageTitle" Text="基础概念" Style="{StaticResource PageTitle}" FontSize="22" VerticalAlignment="Center" Margin="0,0,20,0" />
+                    <WrapPanel Grid.Column="1" x:Name="SectionButtons" VerticalAlignment="Center" />
+                    <StackPanel Grid.Column="2" x:Name="FilterFields" Orientation="Horizontal" VerticalAlignment="Center">
+                    <ComboBox x:Name="SourceFilterBox" Width="165" Margin="12,0,0,0" VerticalAlignment="Center"
+                              HorizontalAlignment="Right" SelectedIndex="0" SelectionChanged="SourceFilterBox_SelectionChanged"
+                              AutomationProperties.Name="筛选增益与减益来源" ToolTip="可与搜索一起使用，英雄来源包含所属召唤物的效果" Visibility="Collapsed">
+                        <ComboBoxItem Content="全部来源" Tag="all" />
+                        <ComboBoxItem Content="英雄与召唤物" Tag="hero" />
+                        <ComboBoxItem Content="装备" Tag="equipment" />
+                    </ComboBox>
+                    <Grid x:Name="SearchField" Width="245" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="12,0,0,0">
+                        <TextBox x:Name="SearchBox" TextChanged="SearchBox_TextChanged" Padding="12,8,35,8"
+                                 AutomationProperties.Name="筛选基础概念与表格" ToolTip="搜索当前模块的角色、装备、技能、数值或效果；多个词用空格分开" />
+                        <TextBlock x:Name="SearchHint" Text="搜索角色、装备或效果…" Style="{StaticResource MutedText}"
+                                   Margin="13,0,30,0" IsHitTestVisible="False" VerticalAlignment="Center" />
+                        <Button x:Name="ClearSearchButton" Content="×" Click="ClearSearch_Click" Visibility="Collapsed"
+                                HorizontalAlignment="Right" VerticalAlignment="Center" Width="30" MinHeight="28" Height="28"
+                                Margin="0,0,5,0" Padding="0" Background="Transparent" BorderThickness="0"
+                                AutomationProperties.Name="清除基础概念筛选" />
+                    </Grid>
+                    </StackPanel>
+                </Grid>
+        </Border>
+        <Grid x:Name="ConceptContentGrid" Grid.Row="1">
+            <Grid.ColumnDefinitions><ColumnDefinition x:Name="IndexColumn" Width="205" /><ColumnDefinition Width="10" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+            <Border Style="{StaticResource PaperPanel}" Padding="10">
+                <Grid>
+                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                    <StackPanel Margin="5,1,5,9">
+                        <TextBlock x:Name="SectionTitle" FontWeight="SemiBold" FontSize="15" />
+                        <TextBlock x:Name="SectionSummary" Style="{StaticResource MutedText}" Margin="0,6,0,0" />
+                    </StackPanel>
+                    <ListBox x:Name="EntryList" Grid.Row="1" SelectionChanged="EntryList_SelectionChanged"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled" AutomationProperties.Name="基础概念条目">
+                        <ListBox.ItemTemplate><DataTemplate>
+                            <TextBlock Text="{Binding Title}" TextWrapping="Wrap" Margin="2,4" LineHeight="21" />
+                        </DataTemplate></ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+            <Border Grid.Column="2" Style="{StaticResource PaperPanel}" Padding="14,12">
+                <Grid>
+                    <TextBlock x:Name="EmptyText" Text="选择左侧分类，查看效果与生效条件。" Style="{StaticResource MutedText}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <ScrollViewer x:Name="DetailScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel x:Name="DetailPanel" Margin="0,0,9,0">
+                            <TextBlock x:Name="EntryTitle" FontSize="20" FontWeight="SemiBold" TextWrapping="Wrap" />
+                            <TextBlock x:Name="EntrySummary" TextWrapping="Wrap" LineHeight="21" Margin="0,6,0,0" />
+                            <Border x:Name="PlayerSourceCard" Background="{StaticResource PaperLightBrush}"
+                                    BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="6"
+                                    Padding="12,10" Margin="0,12,0,0" Visibility="Collapsed">
+                                <StackPanel>
+                                    <TextBlock Text="玩家攻略 · 来源说明" FontWeight="SemiBold" Margin="0,0,0,5" />
+                                    <TextBlock x:Name="PlayerSourceText" TextWrapping="Wrap" LineHeight="22" />
+                                    <TextBlock Text="以下保留玩家来源的说法与条件；未据此核验当前地图，也未做游戏实测。"
+                                               Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,6,0,0" />
+                                </StackPanel>
+                            </Border>
+                            <StackPanel x:Name="KnowledgeImages" />
+                            <Border x:Name="LeadFormulaCard" Background="{StaticResource PaperLightBrush}"
+                                    BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="6"
+                                    Padding="12,10" Margin="0,12,0,0" Visibility="Collapsed">
+                                <StackPanel>
+                                    <TextBlock Text="完整伤害公式" FontWeight="SemiBold" Margin="0,0,0,7" />
+                                    <TextBlock x:Name="LeadFormulaText" TextWrapping="Wrap" LineHeight="26"
+                                               FontSize="15" FontWeight="SemiBold" />
+                                </StackPanel>
+                            </Border>
+                            <views:DropCalculatorView x:Name="DropCalculator" Margin="0,12,0,0" Visibility="Collapsed" />
+                            <StackPanel x:Name="TableSection" Margin="0,12,0,0">
+                                <TextBlock x:Name="TableFilterText" Style="{StaticResource MutedText}" TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,6" />
+                                <TextBlock x:Name="EffectLegendText" Text="悬停彩色数值，查看属性加成。"
+                                           TextWrapping="Wrap" LineHeight="20" Style="{StaticResource MutedText}" Margin="0,0,0,8" Visibility="Collapsed" />
+                                <Grid x:Name="TableGrid" />
+                            </StackPanel>
+                            <Expander x:Name="RulesExpander" Header="规则说明" IsExpanded="True" Margin="0,14,0,0"
+                                      Foreground="{StaticResource InkBrush}" FontWeight="SemiBold">
+                                <StackPanel x:Name="ParagraphCards" Margin="0,7,0,0" />
+                            </Expander>
+                            <Expander x:Name="ExamplesSection" Header="计算例子" IsExpanded="False" Margin="0,12,0,0"
+                                      Foreground="{StaticResource InkBrush}" FontWeight="SemiBold">
+                                <WrapPanel x:Name="ExampleCards" Margin="0,9,0,0" />
+                            </Expander>
+                            <Expander x:Name="FormulaExpander" Header="公式与计算条件" IsExpanded="False" Margin="0,17,0,0"
+                                      Foreground="{StaticResource InkBrush}" FontWeight="SemiBold"
+                                      AutomationProperties.Name="基础概念公式与计算条件">
+                                <StackPanel x:Name="FormulaCards" Margin="0,10,0,0" />
+                            </Expander>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+        <Border x:Name="GuideSourcesPanel" Grid.Row="1" Style="{StaticResource PaperPanel}" Padding="16,12" Visibility="Collapsed">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel>
+                    <TextBlock Text="玩家攻略来源" FontSize="20" FontWeight="SemiBold" />
+                    <TextBlock Text="按来源整理入口；点击链接在浏览器中阅读原文，使用时请留意原作者标注的版本。"
+                               Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,6,0,12" />
+                    <TextBlock x:Name="GuideSourcesCount" Style="{StaticResource MutedText}" Margin="0,0,0,10" />
+                    <StackPanel x:Name="GuideSourceCards" />
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+    </Grid>
+</UserControl>

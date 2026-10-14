@@ -1,0 +1,116 @@
+<UserControl x:Class="Grimmcair.Desktop.Views.BossGuideView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="clr-namespace:Grimmcair.Desktop.Views"
+             xmlns:services="clr-namespace:Grimmcair.Desktop.Services"
+             FontFamily="Microsoft YaHei UI, Microsoft YaHei, Segoe UI" FontSize="13">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Theme.xaml" /></ResourceDictionary.MergedDictionaries>
+            <services:ResourceImageConverter x:Key="GuideImage" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+        <Border>
+            <Border.Style><Style TargetType="Border" BasedOn="{StaticResource PaperPanel}"><Setter Property="Padding" Value="20,16" /><Setter Property="Margin" Value="0,0,0,14" /><Style.Triggers><DataTrigger Binding="{Binding IsCompact, ElementName=SkillPanel}" Value="True"><Setter Property="Padding" Value="14,9" /><Setter Property="Margin" Value="0,0,0,8" /></DataTrigger></Style.Triggers></Style></Border.Style>
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="260" /></Grid.ColumnDefinitions>
+                <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="1" Padding="4">
+                    <Border.Style><Style TargetType="Border"><Setter Property="Width" Value="76" /><Setter Property="Height" Value="76" /><Style.Triggers><DataTrigger Binding="{Binding IsCompact, ElementName=SkillPanel}" Value="True"><Setter Property="Width" Value="52" /><Setter Property="Height" Value="52" /></DataTrigger></Style.Triggers></Style></Border.Style>
+                    <Image x:Name="BossPortrait" />
+                </Border>
+                <StackPanel Grid.Column="1" Margin="17,0,18,0" VerticalAlignment="Center">
+                    <TextBlock x:Name="BossStageText" Style="{StaticResource MutedText}" Margin="0,0,0,4" />
+                    <TextBlock x:Name="BossNameText" Text="BOSS 信息" Style="{StaticResource PageTitle}" TextWrapping="Wrap" />
+                </StackPanel>
+                <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                    <TextBlock Text="选择 BOSS" Style="{StaticResource SectionLabel}" />
+                    <ComboBox x:Name="BossPicker" SelectionChanged="BossPicker_SelectionChanged" AutomationProperties.Name="选择 BOSS">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <Image Source="{Binding Icon, Converter={StaticResource GuideImage}}" Width="26" Height="26" Margin="0,0,9,0" />
+                                    <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+            </Grid>
+        </Border>
+        <Border Grid.Row="1">
+            <Border.Style><Style TargetType="Border" BasedOn="{StaticResource PaperPanel}"><Setter Property="Padding" Value="16,10" /><Setter Property="Margin" Value="0,0,0,14" /><Style.Triggers><DataTrigger Binding="{Binding IsCompact, ElementName=SkillPanel}" Value="True"><Setter Property="Padding" Value="12,6" /><Setter Property="Margin" Value="0,0,0,8" /></DataTrigger></Style.Triggers></Style></Border.Style>
+            <StackPanel>
+                <ListBox x:Name="UnitList" SelectionChanged="UnitList_SelectionChanged" MaxHeight="116" Tag="{Binding IsCompact, ElementName=SkillPanel}" AutomationProperties.Name="BOSS 本体与附属单位">
+                    <ListBox.ItemContainerStyle><Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}"><Style.Triggers><DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource AncestorType=ListBox}}" Value="True"><Setter Property="Padding" Value="8,5" /><Setter Property="Margin" Value="0,0,4,3" /></DataTrigger></Style.Triggers></Style></ListBox.ItemContainerStyle>
+                    <ListBox.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ListBox.ItemsPanel>
+                    <ListBox.ItemTemplate><DataTemplate><StackPanel Orientation="Horizontal">
+                        <Image Source="{Binding Icon, Converter={StaticResource GuideImage}}" Margin="0,0,9,0"><Image.Style><Style TargetType="Image"><Setter Property="Width" Value="32" /><Setter Property="Height" Value="32" /><Style.Triggers><DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource AncestorType=ListBox}}" Value="True"><Setter Property="Width" Value="26" /><Setter Property="Height" Value="26" /></DataTrigger></Style.Triggers></Style></Image.Style></Image>
+                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                    </StackPanel></DataTemplate></ListBox.ItemTemplate>
+                </ListBox>
+                <TextBlock x:Name="UnitOriginText" Style="{StaticResource MutedText}" Margin="6,6,6,0" />
+            </StackPanel>
+        </Border>
+        <Border Grid.Row="2">
+            <Border.Style><Style TargetType="Border" BasedOn="{StaticResource PaperPanel}"><Setter Property="Padding" Value="20,16" /><Style.Triggers><DataTrigger Binding="{Binding IsCompact, ElementName=SkillPanel}" Value="True"><Setter Property="Padding" Value="14,10" /></DataTrigger></Style.Triggers></Style></Border.Style>
+            <Grid>
+                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                <WrapPanel x:Name="SectionButtons">
+                    <WrapPanel.Style><Style TargetType="WrapPanel"><Setter Property="Margin" Value="0,0,0,18" /><Style.Triggers><DataTrigger Binding="{Binding IsCompact, ElementName=SkillPanel}" Value="True"><Setter Property="Margin" Value="0,0,0,10" /></DataTrigger></Style.Triggers></Style></WrapPanel.Style>
+                    <Button x:Name="AttributesButton" Content="BOSS 属性" Tag="attributes" Click="Section_Click" Margin="0,0,8,0" MinWidth="110" />
+                    <Button x:Name="SkillsButton" Content="BOSS 技能" Tag="skills" Click="Section_Click" Margin="0,0,8,0" MinWidth="110" />
+                    <Button x:Name="DropsButton" Content="BOSS 掉落物" Tag="drops" Click="Section_Click" Margin="0,0,8,0" MinWidth="118" />
+                    <Button x:Name="PlayersButton" Content="人数影响" Tag="players" Click="Section_Click" MinWidth="110" />
+                </WrapPanel>
+                <Grid Grid.Row="1">
+                    <ScrollViewer x:Name="AttributesPanel" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,8,0">
+                        <StackPanel>
+                            <TextBlock x:Name="AttributeHeading" Text="基础属性" Style="{StaticResource SectionLabel}" />
+                            <TextBlock x:Name="AttributesText" TextWrapping="Wrap" LineHeight="25" />
+                        </StackPanel>
+                    </ScrollViewer>
+                    <views:GuideSkillPanel x:Name="SkillPanel" Visibility="Collapsed" />
+                    <Grid x:Name="DropsPanel" Visibility="Collapsed">
+                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                        <StackPanel Margin="0,0,0,12">
+                            <DockPanel Margin="0,0,0,7">
+                                <Button x:Name="DropRulesButton" Content="查看掉率说明 →" Click="DropRules_Click" DockPanel.Dock="Right" Padding="12,6" Margin="12,0,0,0" AutomationProperties.Name="查看掉率说明" />
+                                <TextBlock Text="基础掉落概率" Style="{StaticResource SectionLabel}" VerticalAlignment="Center" Margin="0" />
+                            </DockPanel>
+                            <TextBlock x:Name="DropScopeText" Text="基础值尚未计入人数、许愿等适用修正；查看掉率说明可了解抽签和领取条件。" Style="{StaticResource MutedText}" />
+                            <TextBlock x:Name="DropsEmptyText" Text="掉落资料待补充" Style="{StaticResource MutedText}" Visibility="Collapsed" Margin="0,10,0,0" />
+                        </StackPanel>
+                        <ListBox x:Name="DropList" Grid.Row="1" AutomationProperties.Name="BOSS 掉落物列表">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                        <Image Source="{Binding Icon, Converter={StaticResource GuideImage}}" Width="44" Height="44" Margin="0,2,14,0" VerticalAlignment="Top" />
+                                        <StackPanel Grid.Column="1" Margin="0,0,15,0">
+                                            <TextBlock Text="{Binding ItemName}" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                            <TextBlock Text="{Binding BaseChanceText}" TextWrapping="Wrap" LineHeight="22" Margin="0,6,0,0" />
+                                            <TextBlock Text="{Binding Notes}" Style="{StaticResource MutedText}" Margin="0,4,0,0" />
+                                            <Expander Header="掉落条件与领取" Margin="0,7,0,0" IsExpanded="False" Foreground="{StaticResource MutedBrush}">
+                                                <Expander.Style><Style TargetType="Expander"><Style.Triggers><DataTrigger Binding="{Binding DetailsText}" Value=""><Setter Property="Visibility" Value="Collapsed" /></DataTrigger></Style.Triggers></Style></Expander.Style>
+                                                <TextBlock Text="{Binding DetailsText}" TextWrapping="Wrap" LineHeight="23" Margin="0,8,0,0" />
+                                            </Expander>
+                                        </StackPanel>
+                                        <Button Grid.Column="2" Content="物品信息 →" Tag="{Binding ItemId}" Click="DropItem_Click" VerticalAlignment="Center" AutomationProperties.Name="{Binding ItemName}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Grid>
+                    <ScrollViewer x:Name="PlayersPanel" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,8,0">
+                        <StackPanel>
+                            <TextBlock Text="人数与结算影响" Style="{StaticResource SectionLabel}" />
+                            <TextBlock x:Name="PlayersText" TextWrapping="Wrap" LineHeight="25" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

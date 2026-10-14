@@ -1,0 +1,19 @@
+<Window x:Class="Grimmcair.Desktop.Views.ArchiveToastWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="格林姆迦尔的妙妙工具箱·保存通知" Width="340" Height="110"
+        WindowStyle="None" ResizeMode="NoResize" ShowInTaskbar="False" ShowActivated="False"
+        WindowStartupLocation="Manual" Left="-10000" Top="-10000" Topmost="True"
+        Background="#F6E6BE" Foreground="#52361F" FontFamily="Microsoft YaHei UI"
+        Focusable="False" UseLayoutRounding="True">
+    <Border BorderBrush="#8C5A31" BorderThickness="1" Background="#F6E6BE" Padding="15,12">
+        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="4"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+            <Border Background="#8C5A31" CornerRadius="2" Margin="0,1,0,1"/>
+            <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                <TextBlock x:Name="NoticeTitle" FontSize="16" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                <TextBlock x:Name="NoticeMessage" FontSize="12" Foreground="#775B3B" Margin="0,7,0,0"
+                           LineHeight="18" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxHeight="38"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

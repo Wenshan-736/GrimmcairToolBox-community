@@ -1,0 +1,350 @@
+<Window x:Class="Grimmcair.Desktop.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="clr-namespace:Grimmcair.Desktop.Views"
+        xmlns:services="clr-namespace:Grimmcair.Desktop.Services"
+        Title="格林姆迦尔的妙妙工具箱·专用版" Width="1600" Height="860" MinWidth="1100" MinHeight="720"
+        WindowStartupLocation="CenterScreen" Background="#E4D1AA" Foreground="#4F3523" Icon="Assets/logo.png"
+        FontFamily="Microsoft YaHei UI, Microsoft YaHei, Segoe UI" FontSize="13"
+        UseLayoutRounding="True" SnapsToDevicePixels="True">
+    <Window.Resources>
+        <ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="Theme.xaml" /></ResourceDictionary.MergedDictionaries><services:ResourceImageConverter x:Key="ResourceImage" /><BooleanToVisibilityConverter x:Key="BoolVisibility" /></ResourceDictionary>
+    </Window.Resources>
+    <Grid Background="#E4D1AA">
+        <Grid.ColumnDefinitions><ColumnDefinition Width="212" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+        <Border Background="{StaticResource WoodBrush}" BorderBrush="#8C6642" BorderThickness="0,0,1,0">
+            <Grid Background="{StaticResource WoodGrainBrush}" Margin="15,26,15,20">
+                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                <StackPanel Margin="10,0,10,22">
+                    <Image Source="Assets/logo.png" Width="58" Height="58" HorizontalAlignment="Left" RenderOptions.BitmapScalingMode="HighQuality" />
+                    <TextBlock Text="格林姆迦尔" FontSize="24" Foreground="#F4E3C2" Margin="0,13,0,4" />
+                    <TextBlock Text="妙妙工具箱" FontSize="14" Foreground="#C6A575" />
+                </StackPanel>
+                <StackPanel Grid.Row="1">
+                    <Button Click="EquipmentNav_Click" AutomationProperties.Name="物品信息">
+                        <Button.Style><Style TargetType="Button" BasedOn="{StaticResource NavButton}"><Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedIndex, ElementName=MainPages}" Value="0"><Setter Property="Background" Value="#F1E2BD" /><Setter Property="Foreground" Value="#4F3523" /><Setter Property="BorderBrush" Value="#E2C899" /></DataTrigger>
+                        </Style.Triggers></Style></Button.Style>
+                        <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE8F1;" FontFamily="Segoe MDL2 Assets" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" VerticalAlignment="Center" Margin="0,0,12,0" /><TextBlock Text="物品信息" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" /></StackPanel>
+                    </Button>
+                    <Button Click="HeroesNav_Click" AutomationProperties.Name="英雄信息">
+                        <Button.Style><Style TargetType="Button" BasedOn="{StaticResource NavButton}"><Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedIndex, ElementName=MainPages}" Value="2"><Setter Property="Background" Value="#F1E2BD" /><Setter Property="Foreground" Value="#4F3523" /><Setter Property="BorderBrush" Value="#E2C899" /></DataTrigger>
+                        </Style.Triggers></Style></Button.Style>
+                        <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE77B;" FontFamily="Segoe MDL2 Assets" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" VerticalAlignment="Center" Margin="0,0,12,0" /><TextBlock Text="英雄信息" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" /></StackPanel>
+                    </Button>
+                    <Button Click="BossesNav_Click" AutomationProperties.Name="BOSS 信息">
+                        <Button.Style><Style TargetType="Button" BasedOn="{StaticResource NavButton}"><Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedIndex, ElementName=MainPages}" Value="3"><Setter Property="Background" Value="#F1E2BD" /><Setter Property="Foreground" Value="#4F3523" /><Setter Property="BorderBrush" Value="#E2C899" /></DataTrigger>
+                        </Style.Triggers></Style></Button.Style>
+                        <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE7BA;" FontFamily="Segoe MDL2 Assets" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" VerticalAlignment="Center" Margin="0,0,12,0" /><TextBlock Text="BOSS 信息" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" /></StackPanel>
+                    </Button>
+                    <Button Click="ConceptsNav_Click" AutomationProperties.Name="基础概念">
+                        <Button.Style><Style TargetType="Button" BasedOn="{StaticResource NavButton}"><Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedIndex, ElementName=MainPages}" Value="5"><Setter Property="Background" Value="#F1E2BD" /><Setter Property="Foreground" Value="#4F3523" /><Setter Property="BorderBrush" Value="#E2C899" /></DataTrigger>
+                        </Style.Triggers></Style></Button.Style>
+                        <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE82D;" FontFamily="Segoe MDL2 Assets" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" VerticalAlignment="Center" Margin="0,0,12,0" /><TextBlock Text="基础概念" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" /></StackPanel>
+                    </Button>
+                    <Button Click="SavesNav_Click" AutomationProperties.Name="我的存档">
+                        <Button.Style><Style TargetType="Button" BasedOn="{StaticResource NavButton}"><Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedIndex, ElementName=MainPages}" Value="1"><Setter Property="Background" Value="#F1E2BD" /><Setter Property="Foreground" Value="#4F3523" /><Setter Property="BorderBrush" Value="#E2C899" /></DataTrigger>
+                        </Style.Triggers></Style></Button.Style>
+                        <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" VerticalAlignment="Center" Margin="0,0,12,0" /><TextBlock Text="我的存档" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" /></StackPanel>
+                    </Button>
+                    <Button Click="AiNav_Click" AutomationProperties.Name="AI 对话">
+                        <Button.Style><Style TargetType="Button" BasedOn="{StaticResource NavButton}"><Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedIndex, ElementName=MainPages}" Value="6"><Setter Property="Background" Value="#F1E2BD" /><Setter Property="Foreground" Value="#4F3523" /><Setter Property="BorderBrush" Value="#E2C899" /></DataTrigger>
+                        </Style.Triggers></Style></Button.Style>
+                        <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE8F2;" FontFamily="Segoe MDL2 Assets" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" VerticalAlignment="Center" Margin="0,0,12,0" /><TextBlock Text="AI 对话" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" /></StackPanel>
+                    </Button>
+                    <Button Click="SettingsNav_Click" AutomationProperties.Name="设置">
+                        <Button.Style><Style TargetType="Button" BasedOn="{StaticResource NavButton}"><Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedIndex, ElementName=MainPages}" Value="4"><Setter Property="Background" Value="#F1E2BD" /><Setter Property="Foreground" Value="#4F3523" /><Setter Property="BorderBrush" Value="#E2C899" /></DataTrigger>
+                        </Style.Triggers></Style></Button.Style>
+                        <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" VerticalAlignment="Center" Margin="0,0,12,0" /><TextBlock Text="设置" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" /></StackPanel>
+                    </Button>
+                </StackPanel>
+                <Button x:Name="AboutButton" Grid.Row="3" Margin="10,0,10,0" Click="About_Click" AutomationProperties.Name="关于格林姆迦尔的妙妙工具箱·专用版" Background="Transparent" BorderThickness="0" Padding="0" HorizontalContentAlignment="Stretch" ToolTip="关于应用与参考资料">
+                    <Border BorderBrush="#755438" BorderThickness="0,1,0,0" Padding="0,19,0,0">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal"><Ellipse Width="6" Height="6" Fill="#D9B579" Margin="0,0,8,0" /><TextBlock x:Name="EditionTitleText" Text="妙妙工具箱·专用版" Foreground="#ECD7B3" FontSize="13" /></StackPanel>
+                            <TextBlock x:Name="ApplicationVersionText" Text="应用版本 · 0.1.8 Preview" Foreground="#C6AA85" FontSize="10" Margin="0,14,0,0" />
+                            <TextBlock Text="地图版本 · TWRPG 0.94a" Foreground="#C6AA85" FontSize="10" Margin="0,5,0,0" />
+                        </StackPanel>
+                    </Border>
+                </Button>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Column="1" Margin="27,25,27,14">
+            <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+            <TabControl x:Name="MainPages" BorderThickness="0" Background="Transparent" SelectedIndex="0">
+                <TabControl.Template><ControlTemplate TargetType="TabControl"><ContentPresenter ContentSource="SelectedContent" /></ControlTemplate></TabControl.Template>
+                <TabItem Header="物品信息">
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                        <Grid x:Name="EquipmentHeader" Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="280" /><ColumnDefinition Width="12" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                <Grid>
+                                    <TextBox x:Name="SearchBox" TextChanged="SearchBox_TextChanged" Padding="40,12,14,12" MinHeight="49" FontSize="14" ToolTip="输入物品名称、属性或效果关键词" AutomationProperties.Name="搜索物品名称或属性" VerticalAlignment="Stretch">
+                                        <TextBox.Template><ControlTemplate TargetType="TextBox">
+                                            <Border x:Name="SearchChrome" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
+                                                <ScrollViewer x:Name="PART_ContentHost" />
+                                            </Border>
+                                            <ControlTemplate.Triggers><Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter TargetName="SearchChrome" Property="BorderBrush" Value="#9C6839" /></Trigger></ControlTemplate.Triggers>
+                                        </ControlTemplate></TextBox.Template>
+                                    </TextBox>
+                                    <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" Foreground="#9A7B56" Margin="13,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False" />
+                                    <TextBlock x:Name="EquipmentSearchHint" Text="搜索物品名称、属性或效果…" Margin="40,0,10,0" Foreground="#9A8262" FontSize="14" IsHitTestVisible="False" VerticalAlignment="Center" TextTrimming="CharacterEllipsis">
+                                        <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed" /><Style.Triggers><DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value=""><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                                <Border Grid.Column="2" Background="#FCF4E2" BorderBrush="#C3A67D" BorderThickness="1" CornerRadius="6" Padding="10,5">
+                                    <Grid><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                        <TextBlock x:Name="EquipmentTargetHint" Text="请先选择目标所属存档" Foreground="#7B5A3B" FontSize="11" TextTrimming="CharacterEllipsis" ToolTip="目标跟随所选存档；右键装备添加目标，右键目标取消。" />
+                                        <ScrollViewer x:Name="EquipmentTargetScroller" Grid.Row="1" MaxHeight="68" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Margin="0,3,0,0">
+                                            <WrapPanel x:Name="EquipmentTargetItems" />
+                                        </ScrollViewer>
+                                    </Grid>
+                                </Border>
+                                <StackPanel Grid.Column="2" Visibility="Collapsed">
+                                    <TextBlock Text="地图资料 · 0.94a" FontSize="11" Foreground="#765435" HorizontalAlignment="Right" />
+                                    <TextBlock x:Name="CatalogCount" Text="正在整理资料…" Style="{StaticResource MutedText}" Margin="0,5,0,0" HorizontalAlignment="Right" />
+                                </StackPanel>
+                        </Grid>
+                        <ListBox x:Name="CategoryBox" Grid.Row="1" Style="{StaticResource CategoryTabs}" SelectionChanged="CategoryBox_SelectionChanged" SelectedIndex="0" AutomationProperties.Name="物品类别" Margin="0,0,-7,9">
+                            <ListBoxItem Content="全部" /><ListBoxItem Content="装备" /><ListBoxItem Content="武器" /><ListBoxItem Content="头盔" /><ListBoxItem Content="衣服" /><ListBoxItem Content="饰品" /><ListBoxItem Content="翅膀" /><ListBoxItem Content="材料" /><ListBoxItem Content="徽章" /><ListBoxItem Content="结晶" /><ListBoxItem Content="目标" />
+                        </ListBox>
+                        <Grid Grid.Row="2">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="0.95*" MinWidth="295" /><ColumnDefinition Width="16" /><ColumnDefinition Width="1.18*" /></Grid.ColumnDefinitions>
+                            <Border Style="{StaticResource PaperPanel}" Padding="11,16,7,10">
+                                <Grid><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                                    <DockPanel Margin="12,0,7,12"><TextBlock Text="阶段由高到低" DockPanel.Dock="Right" FontSize="10" Foreground="#92714D" VerticalAlignment="Center" /><TextBlock Text="冒险物资目录" Style="{StaticResource SectionLabel}" Margin="0" /></DockPanel>
+                                    <ListBox x:Name="EquipmentList" Grid.Row="1" SelectionChanged="EquipmentList_SelectionChanged" AutomationProperties.Name="装备目录" PreviewMouseRightButtonDown="EquipmentList_PreviewMouseRightButtonDown" ContextMenuOpening="EquipmentList_ContextMenuOpening">
+                                        <ListBox.ItemTemplate><DataTemplate>
+                                            <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="48" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                                <Border Width="40" Height="40" VerticalAlignment="Top" HorizontalAlignment="Left" Background="#DCC49A" CornerRadius="5" BorderBrush="#BFA173" BorderThickness="1"><Grid><TextBlock Text="◇" FontSize="25" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="图标暂缺"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed" /><Style.Triggers><DataTrigger Binding="{Binding IconPath}" Value=""><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock><Image Source="{Binding IconPath, Converter={StaticResource ResourceImage}}" Width="36" Height="36" RenderOptions.BitmapScalingMode="HighQuality" /></Grid></Border>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}" />
+                                                    <TextBlock Text="{Binding CatalogLabel}" ToolTip="{Binding StageNote}" Margin="0,4,0,0" FontSize="10" Foreground="#92714D" />
+                                                    <TextBlock Text="{Binding ShortDescription}" FontSize="11" Foreground="#806247" Margin="0,6,0,0" TextTrimming="CharacterEllipsis" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </DataTemplate></ListBox.ItemTemplate>
+                                    </ListBox>
+                                </Grid>
+                            </Border>
+                            <Border Grid.Column="2" Style="{StaticResource PaperPanel}" Padding="24,23,24,20">
+                                <Grid><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="78" /><ColumnDefinition /></Grid.ColumnDefinitions>
+                                        <Border Background="#DBC093" BorderBrush="#B99A6B" BorderThickness="1" CornerRadius="9" Width="64" Height="64" HorizontalAlignment="Left" VerticalAlignment="Top"><Grid><TextBlock Text="◇" FontSize="36" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="图标暂缺"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed" /><Style.Triggers><DataTrigger Binding="{Binding Source, ElementName=DetailIcon}" Value="{x:Null}"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock><Image x:Name="DetailIcon" Width="56" Height="56" RenderOptions.BitmapScalingMode="HighQuality" /></Grid></Border>
+                                        <StackPanel Grid.Column="1"><TextBlock x:Name="DetailCategory" Text="物品资料" FontSize="11" Foreground="#8B653F" Margin="0,1,0,7" /><TextBlock x:Name="DetailName" Text="选择一件物品" FontSize="23" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                            <WrapPanel Margin="0,7,0,0"><TextBlock x:Name="DetailSource" Visibility="Collapsed" /><Button x:Name="ShowEffectsButton" Content="查看技能与特效 ↓" Click="ShowEffects_Click" Padding="8,4" FontSize="11" Visibility="Collapsed" /></WrapPanel>
+                                        </StackPanel>
+                                    </Grid>
+                                    <ListBox x:Name="DetailTabs" Grid.Row="1" Style="{StaticResource CategoryTabs}" SelectionChanged="DetailTabs_SelectionChanged" SelectedIndex="0" Margin="0,18,-7,8" AutomationProperties.Name="物品详情栏目">
+                                        <ListBoxItem Content="属性与特效" /><ListBoxItem x:Name="RecipeTab" Content="合成与用途" />
+                                    </ListBox>
+                                    <ScrollViewer x:Name="DetailScroll" Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,8,0">
+                                        <StackPanel>
+                                            <Expander x:Name="DetailOriginalDescription" Header="属性与技能" IsExpanded="True">
+                                            <StackPanel Margin="0,10,0,0">
+                                            <TextBlock Text="属性与说明" Style="{StaticResource SectionLabel}" />
+                                            <TextBlock x:Name="DetailDescription" Text="装备属性、材料说明与地图中的原始描述会显示在这里。" TextWrapping="Wrap" FontSize="14" LineHeight="25" />
+                                            <StackPanel x:Name="DetailBadgePanel" Visibility="Collapsed" Margin="0,18,0,0">
+                                                <TextBlock Text="徽章属性加成" Style="{StaticResource SectionLabel}" />
+                                                <TextBlock x:Name="DetailBadgeBonuses" TextWrapping="Wrap" FontSize="14" LineHeight="25" />
+                                            </StackPanel>
+                                            <StackPanel x:Name="DetailEffectsPanel" Visibility="Collapsed" Margin="0,20,0,0">
+                                                <Border Height="1" Background="#CBB38C" Margin="0,0,0,15" />
+                                                <TextBlock Text="技能与特效" Style="{StaticResource SectionLabel}" />
+                                                <TextBlock x:Name="DetailEffectsSource" Visibility="Collapsed" />
+                                                <TextBlock x:Name="DetailEffects" TextWrapping="Wrap" FontSize="14" LineHeight="25" />
+                                            </StackPanel>
+                                            </StackPanel>
+                                            </Expander>
+                                            <StackPanel x:Name="DetailResearchPanel" Visibility="Collapsed" Margin="0,16,0,0">
+                                                <Expander x:Name="DetailResearchExpander" Header="装备效果说明" IsExpanded="False">
+                                                    <StackPanel x:Name="DetailResearchContent" Margin="0,10,0,0" />
+                                                </Expander>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </ScrollViewer>
+                                    <ScrollViewer x:Name="RecipeScroll" Grid.Row="2" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,8,0">
+                                        <StackPanel x:Name="RecipeContent" />
+                                    </ScrollViewer>
+                                    <Border Grid.Row="3" BorderBrush="#CBB38C" BorderThickness="0,1,0,0" Margin="0,18,0,0" Padding="0,16,0,0">
+                                        <Grid><Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                            <StackPanel VerticalAlignment="Center" Margin="0,0,12,0">
+                                                <TextBlock Text="当前存档的装备目标" FontWeight="SemiBold" FontSize="13" />
+                                                <ComboBox x:Name="TargetSaveBox" DisplayMemberPath="Label" SelectionChanged="TargetSaveBox_SelectionChanged" Margin="0,7,0,0" AutomationProperties.Name="目标所属存档" />
+                                                <TextBlock x:Name="TargetCount" Text="请先选择角色存档" Style="{StaticResource MutedText}" Margin="0,4,0,0" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <Button x:Name="TargetButton" Content="加入当前档目标" IsEnabled="False" Click="AddTarget_Click" Style="{StaticResource PrimaryButton}" />
+                                                <Button x:Name="AnalyzeTargetsButton" Content="分析材料" IsEnabled="False" Click="AnalyzeTargets_Click" Margin="0,7,0,0" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </Grid>
+                </TabItem>
+                <TabItem Header="我的存档">
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                        <Border Style="{StaticResource PaperPanel}" Padding="18,15" Margin="0,0,0,12">
+                            <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="0.9*" /><ColumnDefinition Width="24" /><ColumnDefinition Width="1.2*" /><ColumnDefinition Width="20" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <DockPanel Margin="0,0,0,5">
+                                        <ToggleButton x:Name="SaveFavoriteButton" DockPanel.Dock="Right" Click="SaveFavorite_Click"
+                                                      IsChecked="{Binding SelectedItem.IsFavorite, ElementName=SaveList, Mode=OneWay}"
+                                                      Width="30" Height="28" Margin="8,-3,0,0" FontFamily="Segoe UI Symbol" FontSize="23">
+                                            <ToggleButton.Style><Style TargetType="ToggleButton">
+                                                <Setter Property="Content" Value="☆" /><Setter Property="Foreground" Value="#8B6B45" />
+                                                <Setter Property="Background" Value="Transparent" /><Setter Property="BorderBrush" Value="Transparent" />
+                                                <Setter Property="Cursor" Value="Hand" /><Setter Property="ToolTip" Value="收藏此存档，排到列表顶部" />
+                                                <Setter Property="AutomationProperties.Name" Value="收藏此存档" />
+                                                <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ToggleButton">
+                                                    <Border x:Name="StarBorder" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="4" Background="{TemplateBinding Background}">
+                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="StarBorder" Property="Background" Value="#EBD5AB" /></Trigger>
+                                                        <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="StarBorder" Property="BorderBrush" Value="#805331" /></Trigger>
+                                                        <Trigger Property="IsEnabled" Value="False"><Setter TargetName="StarBorder" Property="Opacity" Value="0.4" /></Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate></Setter.Value></Setter>
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsChecked" Value="True"><Setter Property="Content" Value="★" /><Setter Property="Foreground" Value="#9F6717" /><Setter Property="ToolTip" Value="取消收藏" /><Setter Property="AutomationProperties.Name" Value="取消收藏此存档" /></Trigger>
+                                                    <DataTrigger Binding="{Binding SelectedItem, ElementName=SaveList}" Value="{x:Null}"><Setter Property="IsEnabled" Value="False" /></DataTrigger>
+                                                </Style.Triggers>
+                                            </Style></ToggleButton.Style>
+                                        </ToggleButton>
+                                        <TextBlock Text="我的存档" FontSize="16" FontWeight="SemiBold" />
+                                    </DockPanel>
+                                    <ComboBox x:Name="SaveList" SelectionChanged="SaveList_SelectionChanged" MinHeight="62" MaxDropDownHeight="360" AutomationProperties.Name="选择存档">
+                                        <ComboBox.ItemTemplate><DataTemplate><DockPanel>
+                                            <TextBlock DockPanel.Dock="Right" Text="&#xE753;" FontFamily="Segoe MDL2 Assets" Foreground="#527D92" FontSize="19" Margin="12,0,0,0" VerticalAlignment="Center" Visibility="{Binding SyncEnabled, Converter={StaticResource BoolVisibility}}" ToolTip="已开启云同步" />
+                                            <TextBlock DockPanel.Dock="Left" Text="★" FontFamily="Segoe UI Symbol" Foreground="#9F6717" FontSize="17" Margin="0,0,8,0" VerticalAlignment="Center" Visibility="{Binding IsFavorite, Converter={StaticResource BoolVisibility}}" ToolTip="已收藏" />
+                                            <StackPanel><TextBlock Text="{Binding PickerLabel}" Foreground="{Binding SelectionColor}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" /><TextBlock Text="{Binding PickerSubtitle}" Foreground="{Binding SelectionColor}" FontSize="11" Margin="0,4,0,0" TextTrimming="CharacterEllipsis" /></StackPanel>
+                                        </DockPanel></DataTemplate></ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                    <TextBlock x:Name="SaveTitle" Text="你的冒险档案" FontSize="23" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                    <TextBlock x:Name="SaveSummary" Text="选择存档，查看角色物品与藏品。" Style="{StaticResource MutedText}" Margin="0,7,0,0" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="4" HorizontalAlignment="Right" VerticalAlignment="Top">
+                                    <Button x:Name="ImportSaveButton" Content="导入存档" Click="ImportSave_Click" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Right" Margin="0,0,0,14" />
+                                    <ToggleButton x:Name="SaveSyncBox" Content="云同步" Click="SaveSync_Click" HorizontalAlignment="Right" AutomationProperties.Name="开启云同步">
+                                        <ToggleButton.Style>
+                                            <Style TargetType="ToggleButton">
+                                                <Setter Property="Cursor" Value="Hand" />
+                                                <Setter Property="Foreground" Value="#705538" />
+                                                <Setter Property="Template"><Setter.Value>
+                                                    <ControlTemplate TargetType="ToggleButton">
+                                                        <Border x:Name="FocusBorder" BorderBrush="Transparent" BorderThickness="1" CornerRadius="5" Padding="3">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <ContentPresenter VerticalAlignment="Center" Margin="0,0,9,0" />
+                                                                <Border x:Name="Track" Width="44" Height="25" CornerRadius="13" Background="#C4AE8B" BorderBrush="#AC916A" BorderThickness="1">
+                                                                    <Ellipse x:Name="Thumb" Width="19" Height="19" Fill="#FFF8E7" HorizontalAlignment="Left" Margin="2,0,0,0" />
+                                                                </Border>
+                                                            </StackPanel>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsChecked" Value="True"><Setter TargetName="Track" Property="Background" Value="#527D92" /><Setter TargetName="Track" Property="BorderBrush" Value="#42697C" /><Setter TargetName="Thumb" Property="HorizontalAlignment" Value="Right" /><Setter TargetName="Thumb" Property="Margin" Value="0,0,2,0" /></Trigger>
+                                                            <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="FocusBorder" Property="BorderBrush" Value="#805331" /></Trigger>
+                                                            <Trigger Property="IsEnabled" Value="False"><Setter TargetName="FocusBorder" Property="Opacity" Value="0.45" /></Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value></Setter>
+                                            </Style>
+                                        </ToggleButton.Style>
+                                    </ToggleButton>
+                                    <TextBlock x:Name="SaveSyncStatus" FontSize="10" HorizontalAlignment="Right" Margin="0,3,0,0" Visibility="Collapsed" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                        <DockPanel Grid.Row="1" Margin="0,0,0,4">
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top" Margin="10,0,0,7">
+                                <ToggleButton x:Name="MainSaveBox" Content="设为主档" Style="{Binding Style, ElementName=SaveSyncBox}" Click="MainSave_Click" VerticalAlignment="Center" Margin="0,0,10,0" AutomationProperties.Name="设为主档并上传目标与材料需求" />
+                                <Button x:Name="SaveTargetsButton" Content="目标装备" Click="SaveTargets_Click" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" />
+                                <Button x:Name="CommunityLocalSaveHistoryButton" Content="本地历史" Click="LocalSaveHistory_Click" Visibility="Collapsed" VerticalAlignment="Center" Margin="10,0,0,0" ToolTip="查看和恢复这份角色存档在本机保留的历史版本。" />
+                            </StackPanel>
+                            <ListBox x:Name="SaveSectionBox" Style="{StaticResource CategoryTabs}" SelectionChanged="SaveSectionBox_SelectionChanged" AutomationProperties.Name="存档物品分类" />
+                        </DockPanel>
+                        <Border Grid.Row="2" Style="{StaticResource PaperPanel}" Padding="18,13">
+                            <Grid><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                <DockPanel Margin="0,0,0,9"><TextBlock x:Name="SaveItemCount" DockPanel.Dock="Right" Style="{StaticResource MutedText}" FontSize="11" /><TextBlock x:Name="SaveContentTitle" Text="存档内物品" Style="{StaticResource SectionLabel}" Margin="0" /></DockPanel>
+                                <DataGrid x:Name="SaveItemsList" Grid.Row="1" SelectionChanged="SaveItemsList_SelectionChanged" AutomationProperties.Name="存档内物品">
+                                    <DataGrid.Columns>
+                                        <DataGridTemplateColumn Header="" Width="47" CanUserSort="False"><DataGridTemplateColumn.CellTemplate><DataTemplate><Image Source="{Binding IconPath, Converter={StaticResource ResourceImage}}" Width="32" Height="32" /></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
+                                        <DataGridTextColumn Header="物品" Binding="{Binding Name}" Width="*" MinWidth="125" />
+                                        <DataGridTextColumn Header="分类" Binding="{Binding Group}" Width="100" />
+                                        <DataGridTextColumn Header="数量" Binding="{Binding QuantityLabel}" Width="65" />
+                                        <DataGridTextColumn Header="状态" Binding="{Binding State}" Width="145" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                                <Grid x:Name="SaveGoalsPanel" Grid.Row="1" Visibility="Collapsed"><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                    <TextBlock x:Name="SaveGoalsHint" Style="{StaticResource MutedText}" Margin="0,0,0,10" />
+                                    <DataGrid x:Name="SaveGoalsList" Grid.Row="1"><DataGrid.Columns><DataGridTextColumn Header="目标装备" Binding="{Binding ItemName}" Width="*" /><DataGridTextColumn Header="数量" Binding="{Binding Quantity}" Width="80" /></DataGrid.Columns></DataGrid>
+                                    <WrapPanel Grid.Row="2" Margin="0,9,0,0"><Button x:Name="AnalyzeSaveTargetsButton" Content="分析材料" Click="AnalyzeSaveTargets_Click" Style="{StaticResource PrimaryButton}" Margin="0,0,8,0" /><Button Content="前往物品信息添加目标" Click="EquipmentNav_Click" Margin="0,0,8,0" /><Button x:Name="RemoveSaveGoalButton" Content="移除所选目标" Click="RemoveSaveGoal_Click" /></WrapPanel>
+                                </Grid>
+                                <DockPanel Grid.Row="2" Margin="0,10,0,0"><Button DockPanel.Dock="Right" Content="查看物品资料" Click="LocateItem_Click" Padding="10,6" /><TextBlock x:Name="SaveChangeText" Text="暂无物品变化" Style="{StaticResource MutedText}" FontSize="11" VerticalAlignment="Center" Margin="0,0,12,0" /></DockPanel>
+                            </Grid>
+                        </Border>
+                        <Expander Grid.Row="3" x:Name="SaveManagement" Header="管理存档与云同步 · 本地模拟" Margin="0,12,0,0">
+                            <Border Style="{StaticResource PaperPanel}" Padding="12" Margin="0,8,0,0">
+                                <StackPanel>
+                                    <WrapPanel Margin="0,0,0,3"><TextBlock Text="云端存档" VerticalAlignment="Center" Margin="0,0,8,7" /><ComboBox x:Name="CloudCopiesBox" Width="360" DisplayMemberPath="Label" Margin="0,0,8,7" ToolTip="同一游戏名、职业和存档名对应同一云档；旧重复项显示主副档、更新时间与本机关联状态。" /><Button x:Name="LinkCloudButton" Content="关联并同步" Click="LinkCloud_Click" Visibility="Collapsed" ToolTip="用于选择旧重复云档或修复原有错误关联。" Margin="0,0,8,7" /><Button Content="获取并同步" Click="DownloadCloud_Click" ToolTip="按游戏名、职业和存档名取回到同一份本地档，旧版本保留在历史中。" Margin="0,0,8,7" /><Button Content="删除云端存档" Click="DeleteCloud_Click" Margin="0,0,8,7" /><Button x:Name="RefreshCloudButton" Content="刷新云端列表" Click="RefreshCloud_Click" Visibility="Collapsed" Margin="0,0,8,7" /></WrapPanel>
+                                    <WrapPanel>
+                                        <Button Content="更新云端存档" Click="SyncOwnSaves_Click" Margin="0,0,12,7" />
+                                        <Button x:Name="UseRemoteSnapshotButton" Content="采用云端更新" Click="UseRemoteSnapshot_Click" Visibility="Collapsed" Margin="0,0,8,7" />
+                                        <Button x:Name="LocalSaveHistoryButton" Content="本地历史" Click="LocalSaveHistory_Click" ToolTip="按时间查看和恢复这份角色存档在本机保留的历史版本。" Margin="0,0,12,7" />
+                                        <TextBlock x:Name="CloudCapacityText" VerticalAlignment="Center" Style="{StaticResource MutedText}" FontSize="11" Margin="0,0,0,7" />
+                                    </WrapPanel>
+                                    <TextBlock x:Name="SaveNote" Text="云端为本地模拟，尚未连接服务器。" Style="{StaticResource MutedText}" FontSize="10" Margin="0,8,0,0" />
+                                </StackPanel>
+                            </Border>
+                        </Expander>
+                    </Grid>
+                </TabItem>
+                <TabItem Header="英雄信息"><views:HeroGuideView x:Name="HeroGuide" /></TabItem>
+                <TabItem Header="BOSS 信息"><views:BossGuideView x:Name="BossGuide" /></TabItem>
+                <TabItem Header="设置">
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                        <views:SettingsView x:Name="SettingsPage" />
+                        <Border x:Name="DesktopAccountPanel" Grid.Row="1" Style="{StaticResource PaperPanel}" Padding="18,12" Margin="0,14,0,0">
+                            <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                <StackPanel Margin="0,0,18,0" VerticalAlignment="Center">
+                                    <TextBlock Text="账户与云服务" FontSize="15" FontWeight="SemiBold" />
+                                    <TextBlock x:Name="DesktopAuthText" Text="" Style="{StaticResource MutedText}" Margin="0,5,0,0" />
+                                </StackPanel>
+                                <WrapPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <Button x:Name="DesktopLoginButton" Content="连接云服务" Click="DesktopLogin_Click" AutomationProperties.Name="账户与云服务：连接或切换账户" />
+                                    <Button x:Name="DesktopLogoutButton" Content="退出账户" Click="DesktopLogout_Click" Visibility="Collapsed" Margin="9,0,0,0" AutomationProperties.Name="账户与云服务：退出账户" />
+                                </WrapPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </TabItem>
+                <TabItem Header="基础概念"><views:ConceptsView x:Name="ConceptGuide" /></TabItem>
+                <TabItem Header="AI 对话"><views:AiChatView x:Name="AiChatPage" /></TabItem>
+            </TabControl>
+            <Border x:Name="DesktopAuthorizationGate" Visibility="Collapsed" Style="{StaticResource PaperPanel}" Padding="40">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="460">
+                    <TextBlock Text="登录格林姆迦尔的妙妙工具箱·专用版" FontSize="22" FontWeight="SemiBold" TextWrapping="Wrap" TextAlignment="Center" HorizontalAlignment="Center" Margin="0,0,0,18" />
+                    <TextBlock x:Name="DesktopAuthorizationMessage" Text="请登录网站账户并验证专用密钥后继续使用。" TextWrapping="Wrap" TextAlignment="Center" Margin="0,0,0,24" />
+                    <Button x:Name="DesktopAuthorizationRetryButton" Content="登录 / 重新验证" Click="DesktopLogin_Click" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Center" />
+                </StackPanel>
+            </Border>
+            <Grid Grid.Row="1" Margin="1,12,1,0"><Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <TextBlock x:Name="StatusText" Text="欢迎使用妙妙工具箱。" Foreground="#8C7150" FontSize="11" TextTrimming="CharacterEllipsis" Margin="0,0,15,0" />
+                <TextBlock x:Name="RunningModeText" Grid.Column="1" Text="本地运行 · 预览版" Foreground="#9D815E" FontSize="10" />
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

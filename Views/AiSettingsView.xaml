@@ -1,0 +1,40 @@
+<UserControl x:Class="Grimmcair.Desktop.Views.AiSettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Theme.xaml" /></ResourceDictionary.MergedDictionaries></ResourceDictionary></UserControl.Resources>
+    <Border Style="{StaticResource PaperPanel}" Padding="22,18" Margin="0,0,0,16">
+        <StackPanel>
+            <DockPanel Margin="0,0,0,6">
+                <TextBlock Text="AI 对话" FontSize="19" FontWeight="SemiBold" />
+                <TextBlock Text="OpenAI 兼容接口" Style="{StaticResource MutedText}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+            </DockPanel>
+            <TextBlock Text="连接你选择的 AI 服务，让它结合本地资料回答问题。" Style="{StaticResource MutedText}" Margin="0,0,0,16" />
+            <Grid x:Name="Editor">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="105" /><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                <TextBlock Text="API 地址" VerticalAlignment="Center" />
+                <TextBox x:Name="UrlBox" Grid.Column="1" Grid.ColumnSpan="2" AutomationProperties.Name="AI API 地址" ToolTip="例如 https://api.example.com/v1；也支持服务根地址和完整 chat/completions 地址。" TextChanged="EditorChanged" />
+                <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Text="填写服务提供的 API 地址，例如 https://api.example.com/v1" Style="{StaticResource MutedText}" Margin="0,5,0,12" />
+                <TextBlock Grid.Row="2" Text="API 密钥" VerticalAlignment="Center" />
+                <PasswordBox x:Name="KeyBox" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Padding="12,9" MinHeight="39" Background="#FCF4E2" BorderBrush="#C3A67D" AutomationProperties.Name="AI API 密钥" PasswordChanged="EditorChanged" />
+                <TextBlock Grid.Row="3" Text="使用模型" VerticalAlignment="Center" Margin="0,12,0,0" />
+                <ComboBox x:Name="ModelBox" Grid.Row="3" Grid.Column="1" Margin="0,12,10,0" AutomationProperties.Name="AI 使用模型" SelectionChanged="EditorChanged" />
+                <Button x:Name="ModelsButton" Grid.Row="3" Grid.Column="2" Content="获取可用模型" Margin="0,12,0,0" Click="Models_Click" />
+            </Grid>
+            <TextBlock x:Name="ProviderNote" Visibility="Collapsed" Text="测试会检查普通回答和深度思考能力，是否开启在每个对话中选择。深度思考会结合问题和查询结果继续分析，回答可能更慢。" Style="{StaticResource MutedText}" Margin="0,10,0,0" />
+            <TextBlock Text="密钥加密保存在当前 Windows 用户下。你的问题、最近的对话及查询到的公开资料会发送给所配置的服务；不会自动读取或上传存档。" Style="{StaticResource MutedText}" Margin="0,14,0,0" />
+            <Border Background="#EDDCB8" CornerRadius="7" Padding="13,10" Margin="0,12,0,0">
+                <StackPanel>
+                    <TextBlock Text="本地知识库 · 预览" FontWeight="SemiBold" />
+                    <TextBlock Text="对话会附带游戏基础概念与资料目录，再通过只读 MCP 查询装备、英雄、BOSS 和获准收录的攻略。相关配图在回答中展示，来源和版本分别保留。" Style="{StaticResource MutedText}" Margin="0,3,0,0" />
+                </StackPanel>
+            </Border>
+            <TextBlock x:Name="Status" Text="填写地址和密钥 → 获取模型 → 测试连接 → 保存。" Style="{StaticResource MutedText}" Margin="0,14,0,10" AutomationProperties.Name="AI 连接状态" AutomationProperties.LiveSetting="Polite" />
+            <WrapPanel HorizontalAlignment="Right">
+                <Button x:Name="CancelButton" Content="停止测试" Visibility="Collapsed" Click="Cancel_Click" Margin="0,0,9,0" />
+                <Button x:Name="TestButton" Content="测试连接" Click="Test_Click" Margin="0,0,9,0" />
+                <Button x:Name="SaveButton" Content="保存 AI 设置" Style="{StaticResource PrimaryButton}" IsEnabled="False" Click="Save_Click" />
+            </WrapPanel>
+        </StackPanel>
+    </Border>
+</UserControl>

@@ -1,0 +1,128 @@
+<UserControl x:Class="Grimmcair.Desktop.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="clr-namespace:Grimmcair.Desktop.Views"
+             FontFamily="Microsoft YaHei UI, Microsoft YaHei, Segoe UI" FontSize="13">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Theme.xaml" /></ResourceDictionary.MergedDictionaries>
+            <Style x:Key="SettingsFieldLabel" TargetType="TextBlock">
+                <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Margin" Value="0,0,14,0" />
+            </Style>
+            <Style x:Key="HotkeyBox" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                <Setter Property="IsReadOnly" Value="True" />
+                <Setter Property="Cursor" Value="Hand" />
+                <Setter Property="ToolTip" Value="点击后按下快捷键；Delete 或退格清除" />
+                <Setter Property="MinWidth" Value="190" />
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+        <StackPanel Margin="0,0,0,16">
+            <TextBlock Text="设置" Style="{StaticResource PageTitle}" />
+            <TextBlock Text="管理本地知识库、AI 连接、游戏路径与归档。" Style="{StaticResource MutedText}" Margin="0,7,0,0" />
+        </StackPanel>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,5,0">
+            <StackPanel>
+                <Border x:Name="DataLocationPanel" Style="{StaticResource PaperPanel}" Padding="20,16" Margin="0,0,0,14">
+                    <StackPanel>
+                        <TextBlock Text="本机数据" Style="{StaticResource SectionLabel}" />
+                        <TextBlock x:Name="DataLocationDescription" TextWrapping="Wrap" Margin="0,4,0,8" />
+                        <TextBox x:Name="DataLocationPath" IsReadOnly="True" AutomationProperties.Name="当前用户数据目录" Margin="0,0,0,8" />
+                        <WrapPanel>
+                            <Button x:Name="ImportLegacyDataButton" Content="导入旧版 UserData…" Click="ImportLegacyData_Click" Margin="0,0,10,8" />
+                            <Button x:Name="RevertDataButton" Content="切回上次数据" Click="RevertData_Click" Margin="0,0,10,8" />
+                        </WrapPanel>
+                        <TextBlock x:Name="DataLocationStatus" Style="{StaticResource MutedText}" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" />
+                    </StackPanel>
+                </Border>
+                <views:KnowledgeSettingsView x:Name="KnowledgeSettings" />
+                <views:AiSettingsView x:Name="AiSettings" />
+                <StackPanel x:Name="LocalSettingsSections">
+                <Border Style="{StaticResource PaperPanel}" Padding="20,16" Margin="0,0,0,14">
+                    <StackPanel>
+                        <TextBlock Text="游戏与保存位置" Style="{StaticResource SectionLabel}" />
+                        <Grid Margin="0,0,0,9">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="112" /><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <TextBlock Text="游戏目录" Style="{StaticResource SettingsFieldLabel}" />
+                            <TextBox x:Name="GameDirectoryBox" Grid.Column="1" AutomationProperties.Name="游戏目录" LostKeyboardFocus="GameDirectory_LostKeyboardFocus" />
+                            <Button Grid.Column="2" Content="选择…" Margin="10,0,0,0" Tag="GameDirectoryBox" Click="BrowseFolder_Click" />
+                        </Grid>
+                        <Grid Margin="0,0,0,9">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="112" /><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <TextBlock Text="录像来源" Style="{StaticResource SettingsFieldLabel}" />
+                            <TextBox x:Name="ReplaySourceDirectoryBox" Grid.Column="1" AutomationProperties.Name="录像来源目录" ToolTip="选择录像所在的 Replay 文件夹；同时读取子文件夹中的 .w3g 和 KK 平台 .nwg 录像。留空时使用游戏目录下的 Replay 文件夹" />
+                            <Button Grid.Column="2" Content="选择…" Margin="10,0,0,0" Tag="ReplaySourceDirectoryBox" Click="BrowseFolder_Click" />
+                        </Grid>
+                        <Grid Margin="0,0,0,9">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="112" /><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <TextBlock Text="存档来源" Style="{StaticResource SettingsFieldLabel}" />
+                            <TextBox x:Name="SaveSourceDirectoryBox" Grid.Column="1" AutomationProperties.Name="存档来源目录" />
+                            <Button Grid.Column="2" Content="选择…" Margin="10,0,0,0" Tag="SaveSourceDirectoryBox" Click="BrowseFolder_Click" />
+                        </Grid>
+                        <TextBlock x:Name="SaveSourceHint" Text="选择文件夹时需要包含 .txt 存档。当前可使用 tool/ref/save 模拟游戏存档目录；保存设置后对比归档记录并复制新内容，再持续监听。" Style="{StaticResource MutedText}" Margin="112,0,0,12" TextWrapping="Wrap" />
+                        <Grid Margin="0,0,0,9">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="112" /><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <TextBlock Text="截图保存到" Style="{StaticResource SettingsFieldLabel}" />
+                            <TextBox x:Name="ScreenshotDirectoryBox" Grid.Column="1" AutomationProperties.Name="截图保存目录" />
+                            <Button Grid.Column="2" Content="选择…" Margin="10,0,0,0" Tag="ScreenshotDirectoryBox" Click="BrowseFolder_Click" />
+                        </Grid>
+                        <Grid Margin="0,0,0,9">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="112" /><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <TextBlock Text="存档归档到" Style="{StaticResource SettingsFieldLabel}" />
+                            <TextBox x:Name="SaveArchiveDirectoryBox" Grid.Column="1" AutomationProperties.Name="存档归档目录" />
+                            <Button Grid.Column="2" Content="选择…" Margin="10,0,0,0" Tag="SaveArchiveDirectoryBox" Click="BrowseFolder_Click" />
+                        </Grid>
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="112" /><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <TextBlock Text="录像归档到" Style="{StaticResource SettingsFieldLabel}" />
+                            <TextBox x:Name="ReplayArchiveDirectoryBox" Grid.Column="1" AutomationProperties.Name="录像归档目录" />
+                            <Button Grid.Column="2" Content="选择…" Margin="10,0,0,0" Tag="ReplayArchiveDirectoryBox" Click="BrowseFolder_Click" />
+                        </Grid>
+                        <TextBlock Text="各归档目录下按存档名称建立文件夹。存档文件使用“日期＋存档名”；截图、录像使用“序号＋物品变化”。存档变化先记入本局，等退出游戏并生成新的录像后，复制到本局更新过的每个存档目录。来源留空可暂停监听。" Style="{StaticResource MutedText}" Margin="0,10,0,0" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource PaperPanel}" Padding="20,16">
+                    <StackPanel>
+                        <TextBlock Text="快捷键" Style="{StaticResource SectionLabel}" />
+                        <Grid Margin="0,0,0,9">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="112" /><ColumnDefinition Width="230" /><ColumnDefinition Width="Auto" /><ColumnDefinition /></Grid.ColumnDefinitions>
+                            <TextBlock Text="一键截图" Style="{StaticResource SettingsFieldLabel}" />
+                            <TextBox x:Name="ScreenshotHotkeyBox" Grid.Column="1" Style="{StaticResource HotkeyBox}" PreviewKeyDown="HotkeyBox_PreviewKeyDown" AutomationProperties.Name="截图快捷键" />
+                            <Button Grid.Column="2" Content="清除" Margin="10,0,0,0" Tag="ScreenshotHotkeyBox" Click="ClearHotkey_Click" />
+                        </Grid>
+                        <Grid Margin="0,0,0,9">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="112" /><ColumnDefinition Width="230" /><ColumnDefinition Width="Auto" /><ColumnDefinition /></Grid.ColumnDefinitions>
+                            <TextBlock Text="一键下档" Style="{StaticResource SettingsFieldLabel}" />
+                            <TextBox x:Name="LoadHotkeyBox" Grid.Column="1" Style="{StaticResource HotkeyBox}" PreviewKeyDown="HotkeyBox_PreviewKeyDown" AutomationProperties.Name="下档快捷键" />
+                            <Button Grid.Column="2" Content="清除" Margin="10,0,0,0" Tag="LoadHotkeyBox" Click="ClearHotkey_Click" />
+                        </Grid>
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="112" /><ColumnDefinition Width="230" /><ColumnDefinition Width="Auto" /><ColumnDefinition /></Grid.ColumnDefinitions>
+                            <TextBlock Text="一键存档" Style="{StaticResource SettingsFieldLabel}" />
+                            <TextBox x:Name="SaveHotkeyBox" Grid.Column="1" Style="{StaticResource HotkeyBox}" PreviewKeyDown="HotkeyBox_PreviewKeyDown" AutomationProperties.Name="存档快捷键" />
+                            <Button Grid.Column="2" Content="清除" Margin="10,0,0,0" Tag="SaveHotkeyBox" Click="ClearHotkey_Click" />
+                        </Grid>
+                        <TextBlock Text="点击输入框后按键。支持单个字母、数字、F1–F24、数字小键盘等，也可搭配 Ctrl、Alt、Shift；留空表示不绑定。" TextWrapping="Wrap" Style="{StaticResource MutedText}" Margin="0,10,0,0" />
+                        <Border Background="#EDDCB8" CornerRadius="5" Padding="12,9" Margin="0,9,0,0">
+                            <TextBlock Text="截图归入当前所选存档。下档逐段输入所选档代码；存档使用所选档名称（未选择时用游戏默认名称）。使用前切到游戏并关闭聊天输入框；按键后松开，等待输入完成。" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" FontSize="12" />
+                        </Border>
+                    </StackPanel>
+                </Border>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+        <Grid x:Name="LocalSettingsActions" Grid.Row="2" Margin="0,15,0,0">
+            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+            <TextBlock x:Name="SettingsStatus" Style="{StaticResource MutedText}" Margin="0,0,0,10" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" />
+            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="恢复建议值" Click="RestoreDefaults_Click" Margin="0,0,9,0" />
+                <Button Content="重新读取" Click="Reload_Click" Margin="0,0,9,0" />
+                <Button Content="保存设置" Style="{StaticResource PrimaryButton}" Click="Save_Click" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>

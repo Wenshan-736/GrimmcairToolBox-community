@@ -1,0 +1,69 @@
+<Window x:Class="Grimmcair.Desktop.Views.DesktopLoginWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="登录格林姆迦尔的妙妙工具箱·专用版" Width="570" Height="490" MinWidth="480" MinHeight="420"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False" Background="#E4D1AA"
+        Foreground="#4F3523" FontFamily="Microsoft YaHei UI" FontSize="14"
+        UseLayoutRounding="True" Icon="../Assets/logo.png">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Theme.xaml" /></ResourceDictionary.MergedDictionaries>
+            <Style TargetType="PasswordBox">
+                <Setter Property="Background" Value="#FCF4E2" />
+                <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+                <Setter Property="CaretBrush" Value="{StaticResource AccentBrush}" />
+                <Setter Property="BorderBrush" Value="#C3A67D" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="Padding" Value="12,9" />
+                <Setter Property="FontSize" Value="13" />
+                <Setter Property="MinHeight" Value="39" />
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+                <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="PasswordBox">
+                    <Border x:Name="Chrome" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
+                        <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter TargetName="Chrome" Property="BorderBrush" Value="#9C6839" /></Trigger>
+                        <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Chrome" Property="Opacity" Value="0.55" /></Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate></Setter.Value></Setter>
+            </Style>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid Margin="24">
+        <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+        <Border Style="{StaticResource PaperPanel}" Padding="22">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel>
+                    <DockPanel Margin="0,0,0,18">
+                        <Image Source="../Assets/logo.png" Width="48" Height="48" Margin="0,0,14,0" />
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="格林姆迦尔的妙妙工具箱·专用版" FontSize="20" FontWeight="SemiBold" TextWrapping="Wrap" />
+                            <TextBlock Text="使用网站账户与专用密钥登录" Style="{StaticResource MutedText}" Margin="0,4,0,0" />
+                        </StackPanel>
+                    </DockPanel>
+                    <StackPanel x:Name="LoginFields">
+                        <Label Content="网站用户名" Target="{Binding ElementName=UsernameInput}" Padding="0,0,0,5" />
+                        <TextBox x:Name="UsernameInput" MaxLength="32" AutomationProperties.Name="网站用户名" Margin="0,0,0,12" />
+                        <Label Content="专用密钥" Target="{Binding ElementName=DesktopKeyInput}" Padding="0,0,0,5" />
+                        <PasswordBox x:Name="DesktopKeyInput" AutomationProperties.Name="专用密钥" />
+                        <CheckBox x:Name="RememberLoginInput" Content="记住登录" IsChecked="True" Margin="0,13,0,0"
+                                  ToolTip="用户名和专用密钥由当前 Windows 用户加密保存；每次启动仍需在线验证。"
+                                  AutomationProperties.Name="记住登录" />
+                    </StackPanel>
+                    <TextBlock x:Name="ErrorText" Foreground="#963E2F" TextWrapping="Wrap" LineHeight="22"
+                               Visibility="Collapsed" Margin="0,14,0,0" AutomationProperties.LiveSetting="Assertive" />
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+        <Grid Grid.Row="1" Margin="0,18,0,0">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+            <TextBlock x:Name="BusyText" Text="正在登录…" Visibility="Collapsed" VerticalAlignment="Center" Style="{StaticResource MutedText}" />
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="CancelButton" Content="取消" IsCancel="True" Click="Cancel_Click" Margin="0,0,10,0" MinWidth="88" />
+                <Button x:Name="LoginButton" Content="登录" IsDefault="True" Style="{StaticResource PrimaryButton}" Click="Login_Click" MinWidth="100" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

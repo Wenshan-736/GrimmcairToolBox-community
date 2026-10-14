@@ -1,0 +1,29 @@
+<Window x:Class="Grimmcair.Desktop.Views.DesktopConsentWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="云存档与装备需求" Width="600" Height="500" MinWidth="470" MinHeight="350"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False" Background="#E4D1AA"
+        Foreground="#4F3523" FontFamily="Microsoft YaHei UI" FontSize="14"
+        UseLayoutRounding="True" Icon="../Assets/logo.png">
+    <Window.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Theme.xaml" /></ResourceDictionary.MergedDictionaries></ResourceDictionary></Window.Resources>
+    <Grid Margin="24">
+        <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+        <Border Style="{StaticResource PaperPanel}" Padding="23">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel>
+                    <TextBlock Text="云存档与装备需求" FontSize="23" FontWeight="SemiBold" Margin="0,0,0,18" />
+                    <TextBlock x:Name="ServerMessage" TextWrapping="Wrap" LineHeight="25" />
+                    <TextBlock Text="开启后，本地变化自动上传，云端变化自动取回到同一份存档，旧版本全部保留在本机历史。游戏源 TXT 保持只读。" TextWrapping="Wrap" LineHeight="25" Margin="0,15,0,0" />
+                    <TextBlock Text="云同步下方的“设为主档”用于上报目标装备和爵及以上材料需求。角色第一份存档默认打开；同角色只能有一个云主档，开启另一档会转交原目标。关闭后撤回公开需求，目标仍保留在本机。" TextWrapping="Wrap" LineHeight="25" Margin="0,15,0,0" />
+                    <Border Background="#53E6CCA0" CornerRadius="6" Padding="14" Margin="0,20,0,0">
+                        <TextBlock Text="目标装备会影响队伍材料分配，请只填写实际准备制作的装备。" TextWrapping="Wrap" LineHeight="25" FontWeight="SemiBold" />
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+            <Button Content="暂不同意" IsCancel="True" Click="Cancel_Click" Margin="0,0,10,0" />
+            <Button Content="我已了解并同意" Style="{StaticResource PrimaryButton}" Click="Accept_Click" />
+        </StackPanel>
+    </Grid>
+</Window>

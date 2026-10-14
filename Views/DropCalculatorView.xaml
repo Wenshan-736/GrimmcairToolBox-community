@@ -1,0 +1,58 @@
+<UserControl x:Class="Grimmcair.Desktop.Views.DropCalculatorView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Theme.xaml" /></ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Border Background="{StaticResource PaperLightBrush}" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="6" Padding="12">
+        <StackPanel>
+            <TextBlock Text="多件掉落计算器" FontSize="17" FontWeight="SemiBold" />
+            <TextBlock Text="先选首领和人数，再按每个人的实际选择计算；改变条件会自动更新结果。" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,6,0,8" />
+            <WrapPanel>
+                <StackPanel Width="185" Margin="0,0,10,8">
+                    <TextBlock Text="首领" Margin="0,0,0,4" />
+                    <ComboBox x:Name="BossBox" DisplayMemberPath="Name" SelectionChanged="BossBox_SelectionChanged" AutomationProperties.Name="掉落计算首领" />
+                </StackPanel>
+                <StackPanel Width="115" Margin="0,0,10,8">
+                    <TextBlock Text="累计参战人数" Margin="0,0,0,4" />
+                    <TextBox x:Name="ParticipantCountBox" Text="10" TextChanged="ParticipantCountBox_TextChanged" AutomationProperties.Name="掉落计算累计参战人数" ToolTip="1～10人；默认马6人、其他首领10人。已登记参战名单，不是结束时还活着的人数" />
+                </StackPanel>
+                <StackPanel x:Name="PopulationField" Width="165" Margin="0,0,10,8" Visibility="Collapsed">
+                    <TextBlock Text="全图符合条件人数" Margin="0,0,0,4" />
+                    <TextBox x:Name="PopulationCountBox" Text="10" TextChanged="Input_Changed" AutomationProperties.Name="掉落计算全图人数" ToolTip="判、天的掉率人数口径：已启用且有100级主英雄的全图玩家，0～10人，默认10人" />
+                </StackPanel>
+                <StackPanel Width="210" Margin="0,0,0,8">
+                    <TextBlock Text="统计哪些掉落" Margin="0,0,0,4" />
+                    <ComboBox x:Name="ScopeBox" SelectedIndex="0" SelectionChanged="Input_Changed" AutomationProperties.Name="多件掉落统计范围">
+                        <ComboBoxItem Content="普通掉落（含材料）" Tag="ordinary" />
+                        <ComboBoxItem Content="全部登记掉落" Tag="allRegistered" />
+                        <ComboBoxItem Content="仅穿戴装备（目录分类）" Tag="equipment" />
+                    </ComboBox>
+                </StackPanel>
+            </WrapPanel>
+            <WrapPanel Margin="0,2,0,0">
+                <CheckBox x:Name="ManualPopulationBox" Content="手动设置人数倍率" VerticalAlignment="Center" Margin="0,0,12,8"
+                          Checked="Input_Changed" Unchecked="Input_Changed" ToolTip="活动时替换人数加成这个乘区，少人／放手补偿仍另算" />
+                <TextBox x:Name="PopulationMultiplierBox" Text="1" Width="85" Margin="0,0,8,8" IsEnabled="False" TextChanged="Input_Changed"
+                         AutomationProperties.Name="手动人数掉率倍率" ToolTip="填写倍率：1是不加成，1.5是提高50%，0是关闭这个乘区" />
+                <TextBlock x:Name="PopulationDefaultText" Style="{StaticResource MutedText}" VerticalAlignment="Center" Margin="0,0,0,8" TextWrapping="Wrap" />
+            </WrapPanel>
+            <TextBlock x:Name="ScopeNote" Style="{StaticResource MutedText}" TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,8" />
+            <Expander x:Name="RosterExpander" Header="逐人设置许愿、放手和徽章" IsExpanded="False" Foreground="{StaticResource InkBrush}">
+                <StackPanel Margin="0,8,0,8">
+                    <TextBlock x:Name="RosterNote" TextWrapping="Wrap" Style="{StaticResource MutedText}" LineHeight="20" Margin="0,0,0,8" />
+                    <WrapPanel x:Name="RosterCards" />
+                </StackPanel>
+            </Expander>
+            <TextBlock x:Name="ConditionSummary" TextWrapping="Wrap" LineHeight="20" Margin="0,2,0,8" />
+            <TextBlock x:Name="ValidationText" Foreground="#A23C28" TextWrapping="Wrap" Margin="0,0,0,8" Visibility="Collapsed" />
+            <WrapPanel x:Name="ResultCards" />
+            <TextBlock x:Name="ResultNote" TextWrapping="Wrap" Style="{StaticResource MutedText}" LineHeight="20" Margin="0,6,0,0" />
+            <Expander x:Name="DetailsExpander" Header="查看各物品的概率与乘区" IsExpanded="False" Foreground="{StaticResource InkBrush}" Margin="0,8,0,0">
+                <StackPanel x:Name="ProbabilityDetails" Margin="0,8,0,0" />
+            </Expander>
+        </StackPanel>
+    </Border>
+</UserControl>

@@ -1,0 +1,87 @@
+<UserControl x:Class="Grimmcair.Desktop.Views.AiChatView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Theme.xaml" /></ResourceDictionary.MergedDictionaries></ResourceDictionary></UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition /></Grid.RowDefinitions>
+        <DockPanel Margin="0,0,0,18">
+            <StackPanel DockPanel.Dock="Left">
+                <TextBlock Text="AI 对话" Style="{StaticResource PageTitle}" />
+                <TextBlock Text="问问这片世界的装备、英雄与机制。" Style="{StaticResource MutedText}" Margin="0,7,0,0" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <Border Background="#DBE2C6" BorderBrush="#B5C093" BorderThickness="1" CornerRadius="12" Padding="11,5" Margin="0,0,12,0"><TextBlock Text="本地知识库 · 预览" Foreground="#52623A" FontSize="12" /></Border>
+                <Button Content="连接设置" Click="Settings_Click" />
+            </StackPanel>
+        </DockPanel>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="220" /><ColumnDefinition Width="16" /><ColumnDefinition /></Grid.ColumnDefinitions>
+            <Border Style="{StaticResource PaperPanel}" Padding="12">
+                <Grid>
+                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                    <Button x:Name="NewButton" Content="＋  新建对话" Style="{StaticResource PrimaryButton}" Click="New_Click" />
+                    <TextBlock Grid.Row="1" Text="最近的对话" Style="{StaticResource SectionLabel}" Margin="5,21,0,9" />
+                    <ListBox x:Name="HistoryList" Grid.Row="2" Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" HorizontalContentAlignment="Stretch" SelectionChanged="History_Changed" AutomationProperties.Name="AI 历史对话">
+                        <ListBox.ItemTemplate><DataTemplate>
+                            <StackPanel Margin="3,8"><TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" FontSize="13" /><TextBlock Text="{Binding UpdatedDisplay}" Foreground="#947659" FontSize="11" Margin="0,5,0,0" /></StackPanel>
+                        </DataTemplate></ListBox.ItemTemplate>
+                    </ListBox>
+                    <StackPanel Grid.Row="3" Margin="0,12,0,0">
+                        <Button x:Name="DeleteButton" Content="删除当前对话" Click="Delete_Click" Background="Transparent" />
+                        <TextBlock Text="对话自动保存在这台电脑。" Style="{StaticResource MutedText}" TextAlignment="Center" Margin="0,10,0,0" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+            <Border Grid.Column="2" Style="{StaticResource PaperPanel}" Background="#FAF3E4" Padding="0">
+                <Grid>
+                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                    <Border BorderBrush="#DDC9A8" BorderThickness="0,0,0,1" Padding="23,14">
+                        <Grid><Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <TextBlock x:Name="ConversationTitle" Text="新对话" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                            <TextBlock x:Name="ModelLabel" Grid.Column="1" Text="尚未连接模型" Style="{StaticResource MutedText}" Margin="12,0,0,0" MaxWidth="240" TextTrimming="CharacterEllipsis" />
+                        </Grid>
+                    </Border>
+                    <Grid Grid.Row="1">
+                        <ScrollViewer x:Name="MessagesScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="23,20" Visibility="Collapsed">
+                            <StackPanel x:Name="MessageStack" />
+                        </ScrollViewer>
+                        <StackPanel x:Name="Welcome" VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="560" Margin="26,18">
+                            <Border Background="#EEE0BF" CornerRadius="22" Width="58" Height="58" HorizontalAlignment="Center"><TextBlock Text="&#xE8F2;" FontFamily="Segoe MDL2 Assets" FontSize="25" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#87582F" /></Border>
+                            <TextBlock Text="冒险之前，先聊一聊" FontFamily="SimSun" FontSize="27" FontWeight="Bold" TextAlignment="Center" Margin="0,19,0,10" />
+                            <TextBlock Text="从本地资料出发，帮你理清装备选择、技能机制和材料路线。" Style="{StaticResource MutedText}" TextAlignment="Center" Margin="0,0,0,21" />
+                            <UniformGrid Columns="2">
+                                <Button Content="混沌匕首的易伤如何叠加？" Tag="混沌匕首和虚空回声的易伤如何叠加？请查本地资料说明。" Click="Suggestion_Click" Margin="0,0,6,8" Padding="10,12" FontSize="12" Background="#F4E8CE" />
+                                <Button Content="圣殿祭司 T 有什么效果？" Tag="圣殿祭司 T 在当前版本有什么效果和限制？" Click="Suggestion_Click" Margin="6,0,0,8" Padding="10,12" FontSize="12" Background="#F4E8CE" />
+                                <Button Content="查一件装备的合成材料" Tag="请查一下神圣起源羽翼的合成材料，并区分共同材料和可选材料。" Click="Suggestion_Click" Margin="0,0,6,0" Padding="10,12" FontSize="12" Background="#F4E8CE" />
+                                <Button Content="本地知识库收录了什么？" Tag="当前本地知识库收录了什么？哪些内容还不能确认？" Click="Suggestion_Click" Margin="6,0,0,0" Padding="10,12" FontSize="12" Background="#F4E8CE" />
+                            </UniformGrid>
+                            <TextBlock Text="资料中的版本、来源与未确认事项会一并保留。" Style="{StaticResource MutedText}" TextAlignment="Center" Margin="0,17,0,0" />
+                        </StackPanel>
+                    </Grid>
+                    <Border Grid.Row="2" Padding="20,13,20,16" BorderBrush="#DDC9A8" BorderThickness="0,1,0,0" Background="#F6ECD7" CornerRadius="0,0,11,11">
+                        <StackPanel>
+                            <Border x:Name="ConfigureBanner" Background="#EDE0BE" CornerRadius="6" Padding="12,8" Margin="0,0,0,10">
+                                <DockPanel><Button DockPanel.Dock="Right" Content="前往设置" Click="Settings_Click" Padding="12,5" MinHeight="30" Margin="10,0,0,0" /><TextBlock Text="先填写 API 地址和密钥，选择模型并测试连接。" Style="{StaticResource MutedText}" VerticalAlignment="Center" /></DockPanel>
+                            </Border>
+                            <TextBox x:Name="Composer" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="72" MaxHeight="140" VerticalScrollBarVisibility="Auto" VerticalContentAlignment="Top" MaxLength="12000" PreviewKeyDown="Composer_KeyDown" TextChanged="Composer_Changed" AutomationProperties.Name="AI 消息输入" ToolTip="Enter 发送，Shift+Enter 换行" />
+                            <WrapPanel Margin="0,10,0,0" VerticalAlignment="Center">
+                                <CheckBox x:Name="ConversationThinkingBox" Content="深度思考" Checked="ConversationThinking_Changed" Unchecked="ConversationThinking_Changed" VerticalAlignment="Center" Margin="0,0,12,0" AutomationProperties.Name="当前对话深度思考" />
+                                <TextBlock x:Name="ThinkingNote" Text="仅当前对话" FontSize="11" Foreground="#947659" VerticalAlignment="Center" TextWrapping="Wrap" />
+                            </WrapPanel>
+                            <Grid Margin="0,10,0,0"><Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center" Margin="0,0,12,0">
+                                    <TextBlock x:Name="Status" Text="准备好后，就可以开始了。" Style="{StaticResource MutedText}" AutomationProperties.LiveSetting="Polite" />
+                                    <TextBlock Text="Enter 发送 · Shift+Enter 换行" FontSize="11" Foreground="#9B8062" Margin="0,2,0,0" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom">
+                                    <Button x:Name="StopButton" Content="停止生成" Visibility="Collapsed" Click="Stop_Click" Margin="0,0,9,0" />
+                                    <Button x:Name="SendButton" Content="发送  ↑" Style="{StaticResource PrimaryButton}" MinWidth="94" IsEnabled="False" Click="Send_Click" />
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

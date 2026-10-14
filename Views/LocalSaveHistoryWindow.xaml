@@ -1,0 +1,82 @@
+<Window x:Class="Grimmcair.Desktop.Views.LocalSaveHistoryWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="本地存档历史" Width="1080" Height="740" MinWidth="820" MinHeight="550"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False" Background="#E4D1AA"
+        Foreground="#4F3523" FontFamily="Microsoft YaHei UI" FontSize="13" Icon="../Assets/logo.png"
+        UseLayoutRounding="True" Loaded="Window_Loaded" SizeChanged="Window_SizeChanged">
+    <Window.Resources><ResourceDictionary>
+        <ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Theme.xaml" /></ResourceDictionary.MergedDictionaries>
+        <Style x:Key="HistoryCell" TargetType="TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap" /><Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="7,5" />
+        </Style>
+        <Style x:Key="HistoryGridCell" TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}">
+            <Setter Property="Padding" Value="0" />
+        </Style>
+    </ResourceDictionary></Window.Resources>
+    <Grid Margin="18">
+        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+        <Border Style="{StaticResource PaperPanel}" Padding="16,12" Margin="0,0,0,10">
+            <StackPanel>
+                <TextBlock Text="本地存档历史" FontSize="22" FontWeight="SemiBold" />
+                <TextBlock x:Name="SaveHeading" TextWrapping="Wrap" Margin="0,4,0,0" />
+                <TextBlock Text="历史全部保留在本机，云端每个槽位只保留最新版本。这里查看当前所选存档的历史，时间统一为北京时间。"
+                           Style="{StaticResource MutedText}" Margin="0,7,0,0" />
+            </StackPanel>
+        </Border>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="3*" /><ColumnDefinition Width="10" /><ColumnDefinition Width="2*" /></Grid.ColumnDefinitions>
+            <Border Style="{StaticResource PaperPanel}" Padding="12">
+                <Grid><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                    <TextBlock x:Name="HistoryCount" Style="{StaticResource SectionLabel}" />
+                    <DataGrid x:Name="HistoryGrid" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True"
+                              SelectionMode="Single" SelectionUnit="FullRow" RowHeight="NaN" MinRowHeight="52"
+                              CellStyle="{StaticResource HistoryGridCell}"
+                              SelectionChanged="HistoryGrid_SelectionChanged" AutomationProperties.Name="所选存档的本地历史版本">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="北京时间" Binding="{Binding BeijingTimeText}" Width="185" MinWidth="170" ElementStyle="{StaticResource HistoryCell}" />
+                            <DataGridTextColumn x:Name="HistoryRoleColumn" Header="主／副档" Binding="{Binding RoleText}" Width="70" ElementStyle="{StaticResource HistoryCell}" />
+                            <DataGridTextColumn Header="存档名" Binding="{Binding SaveName}" Width="*" MinWidth="110" ElementStyle="{StaticResource HistoryCell}" />
+                            <DataGridTextColumn x:Name="HistoryTargetColumn" Header="目标" Binding="{Binding TargetCount}" Width="55" ElementStyle="{StaticResource HistoryCell}" />
+                            <DataGridTextColumn Header="来源" Binding="{Binding SourceText}" Width="95" ElementStyle="{StaticResource HistoryCell}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Border>
+            <Border Grid.Column="2" Style="{StaticResource PaperPanel}" Padding="14">
+                <Grid><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                    <TextBlock Text="所选版本摘要" FontSize="17" FontWeight="SemiBold" />
+                    <StackPanel Grid.Row="1" Margin="0,9,0,9">
+                        <TextBlock x:Name="SelectionSummary" TextWrapping="Wrap" LineHeight="21" Text="选择一个历史版本，查看等级、物品和目标摘要。" />
+                        <TextBlock x:Name="SelectionState" Style="{StaticResource MutedText}" Margin="0,5,0,0" />
+                    </StackPanel>
+                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel>
+                            <TextBlock Text="持有物品" Style="{StaticResource SectionLabel}" />
+                            <ItemsControl x:Name="SnapshotItems" AutomationProperties.Name="所选历史版本持有物品摘要">
+                                <ItemsControl.ItemTemplate><DataTemplate>
+                                    <DockPanel Margin="0,0,0,7"><TextBlock DockPanel.Dock="Right" Text="{Binding QuantityText}" Margin="8,0,0,0" />
+                                        <TextBlock Text="{Binding Name}" TextWrapping="Wrap" /></DockPanel>
+                                </DataTemplate></ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock x:Name="EmptyInventoryText" Text="此版本没有持有物品摘要。" Style="{StaticResource MutedText}" Visibility="Collapsed" />
+                            <TextBlock Text="保存的目标" Style="{StaticResource SectionLabel}" Margin="0,12,0,9" />
+                            <TextBlock x:Name="GoalSummary" TextWrapping="Wrap" LineHeight="21" />
+                        </StackPanel>
+                    </ScrollViewer>
+                    <TextBlock x:Name="DetailError" Grid.Row="3" TextWrapping="Wrap" Foreground="#A23C28" Margin="0,8,0,0" Visibility="Collapsed" />
+                </Grid>
+            </Border>
+        </Grid>
+        <DockPanel Grid.Row="2" Margin="0,12,0,0">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="14,0,0,0">
+                <Button x:Name="RestoreButton" Content="恢复为当前版本" Style="{StaticResource PrimaryButton}" IsEnabled="False"
+                        Click="Restore_Click" Margin="0,0,9,0" AutomationProperties.Name="将所选本地历史恢复为当前版本" />
+                <Button Content="关闭" IsCancel="True" Click="Close_Click" MinWidth="75" />
+            </StackPanel>
+            <TextBlock Text="恢复会新建一个当前版本，已有历史继续保留；当前主副档身份、同步和收藏状态保留，原游戏TXT不改写。"
+                       Style="{StaticResource MutedText}" VerticalAlignment="Center" FontSize="11" />
+        </DockPanel>
+    </Grid>
+</Window>

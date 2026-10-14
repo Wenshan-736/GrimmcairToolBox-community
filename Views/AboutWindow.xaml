@@ -1,0 +1,30 @@
+<Window x:Class="Grimmcair.Desktop.Views.AboutWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="关于格林姆迦尔的妙妙工具箱·专用版" Width="560" Height="455" MinWidth="490" MinHeight="365"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False" Background="#E4D1AA"
+        FontFamily="Microsoft YaHei UI" FontSize="13" UseLayoutRounding="True">
+    <Window.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Theme.xaml" /></ResourceDictionary.MergedDictionaries></ResourceDictionary></Window.Resources>
+    <Grid Margin="24">
+        <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+        <Border Style="{StaticResource PaperPanel}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel>
+                    <DockPanel Margin="0,0,0,18">
+                        <Image Source="../Assets/logo.png" Width="52" Height="52" Margin="0,0,14,0" />
+                        <StackPanel VerticalAlignment="Center"><TextBlock x:Name="AboutTitleText" Text="格林姆迦尔的妙妙工具箱·专用版" FontSize="20" FontWeight="SemiBold" TextWrapping="Wrap" /><TextBlock x:Name="AboutVersionText" Text="应用 0.1.8 Preview  ·  地图 TWRPG 0.94a" Style="{StaticResource MutedText}" Margin="0,5,0,0" /></StackPanel>
+                    </DockPanel>
+                    <TextBlock x:Name="AuthorText" Text="作者：嘟啦嘿" Margin="0,0,0,12" />
+                    <TextBlock Text="参考与致谢" Style="{StaticResource SectionLabel}" />
+                    <TextBlock Text="本应用参考了装备速查的设计思路和一部分资源。感谢相关作者的整理与分享。" TextWrapping="Wrap" LineHeight="24" />
+                    <TextBlock Text="装备速查 GitHub 仓库：" Margin="0,8,0,4" />
+                    <TextBlock TextWrapping="Wrap" FontSize="12" LineHeight="22">
+                        <Hyperlink NavigateUri="https://github.com/435352980/twrpg-quick-search" RequestNavigate="Reference_RequestNavigate">https://github.com/435352980/twrpg-quick-search</Hyperlink>
+                    </TextBlock>
+                    <TextBlock Text="界面配色与标识沿用 Grimmcair 网站。" TextWrapping="Wrap" LineHeight="24" Margin="0,12,0,0" />
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+        <Button Grid.Row="1" Content="关闭" IsCancel="True" Click="Close_Click" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Right" Margin="0,16,0,0" MinWidth="88" />
+    </Grid>
+</Window>

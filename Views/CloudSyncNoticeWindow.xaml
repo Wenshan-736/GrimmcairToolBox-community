@@ -1,0 +1,23 @@
+<Window x:Class="Grimmcair.Desktop.Views.CloudSyncNoticeWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="开启云同步" Width="570" SizeToContent="Height" ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False" Background="#E4D1AA"
+        Foreground="#4F3523" FontFamily="Microsoft YaHei UI" FontSize="14" Icon="../Assets/logo.png">
+    <Window.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Theme.xaml" /></ResourceDictionary.MergedDictionaries></ResourceDictionary></Window.Resources>
+    <StackPanel Margin="24">
+        <Border Style="{StaticResource PaperPanel}" Padding="23">
+            <StackPanel>
+                <TextBlock Text="云存档与装备需求" FontSize="23" FontWeight="SemiBold" Margin="0,0,0,16" />
+                <TextBlock Text="开启云同步后，完整存档代码用于保存本人的云档，本地变化自动上传，云端变化自动取回同一份存档。每次更新前保留完整本地历史。" TextWrapping="Wrap" LineHeight="25" />
+                <TextBlock Text="材料需求供队长分配材料。请只填写实际准备制作的装备，避免随意添加目标影响队伍分配。" TextWrapping="Wrap" LineHeight="25" FontWeight="SemiBold" Margin="0,14,0,0" />
+                <TextBlock Text="云同步下方的“设为主档”用于上传目标装备和爵及以上材料需求，供队长查看分配，队长不能取得私有代码。角色第一份存档默认打开；同角色开启另一档时，原主档自动关闭。各档独立保留目标，只有当前主档上报目标和材料缺口。" TextWrapping="Wrap" LineHeight="23" Margin="0,14,0,0" />
+                <TextBlock Text="当前预览在本机模拟同步，确认不会发送网络请求。正式接入云服务时会重新确认。" TextWrapping="Wrap" LineHeight="23" Foreground="#806247" Margin="0,14,0,0" />
+            </StackPanel>
+        </Border>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+            <Button Content="暂不开启" IsCancel="True" Margin="0,0,10,0" />
+            <Button Content="我已了解，开启同步" Style="{StaticResource PrimaryButton}" Click="Accept_Click" />
+        </StackPanel>
+    </StackPanel>
+</Window>
