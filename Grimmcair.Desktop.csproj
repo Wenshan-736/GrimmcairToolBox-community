@@ -13,7 +13,7 @@
     <ResourcePackPath Condition="'$(ResourcePackPath)' == ''">Data/resources.gcpak</ResourcePackPath>
     <SaveParserPath Condition="'$(SaveParserPath)' == ''">Dependencies/Grimmcair.SaveParser.dll</SaveParserPath>
     <RootNamespace>Grimmcair.Desktop</RootNamespace>
-    <Version>0.1.8</Version>
+    <Version>0.1.9</Version>
     <Product>格林姆迦尔的妙妙工具箱</Product>
     <Product Condition="'$(DesktopEdition)' == 'Community'">格林姆迦尔的妙妙工具箱·社区版</Product>
     <Product Condition="'$(DesktopEdition)' == 'Dedicated'">格林姆迦尔的妙妙工具箱·专用版</Product>
@@ -43,8 +43,9 @@
   <ItemGroup>
     <PackageReference Include="Markdig" Version="1.4.0" />
     <Compile Remove=".build/**;dist/**;verification/**;tests/**;obj/**;bin/**;Internal/**;artifacts/**" />
+    <Page Remove=".build/**;dist/**;verification/**;tests/**;obj/**;bin/**;Internal/**" />
+    <ApplicationDefinition Remove=".build/**;dist/**;verification/**;tests/**;obj/**;bin/**;Internal/**" />
     <Compile Remove="McpProgram.cs" Condition="'$(KnowledgeMcp)' != 'true'" />
-    <Compile Remove="MainWindow.AiChat.Smoke.cs;MainWindow.KnowledgePreview.cs" Condition="'$(Configuration)' != 'Preview' And '$(Configuration)' != 'Debug'" />
     <None Remove="Data/**;Assets/**;.build/**;dist/**;verification/**;UserData/**;Internal/**;Dependencies/**;artifacts/**" />
     <Resource Include="Assets/*.png" Condition="'$(KnowledgeMcp)' != 'true'" />
     <EmbeddedResource Include="$(ResourcePackPath)" LogicalName="Grimmcair.Resources.gcpak" />

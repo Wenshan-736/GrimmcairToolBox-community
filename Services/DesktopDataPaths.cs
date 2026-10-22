@@ -34,26 +34,8 @@ public static class DesktopDataPaths
             const bool preview = false;
             _current = Resolve(AppContext.BaseDirectory,
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), edition, preview,
-                FindIsolatedDirectory(arguments, AppContext.BaseDirectory));
+                isolatedDirectory: null);
         }
-    }
-
-    internal static string? FindIsolatedDirectory(string[] arguments, string baseDirectory)
-    {
-        for (var i = 0; i < arguments.Length; i++)
-        {
-            if (arguments[i] == "--ai-preview") return Path.Combine(baseDirectory, "AiPreviewData");
-            if (arguments[i] == "--knowledge-preview") return Path.Combine(baseDirectory, "KnowledgePreviewData");
-            if (arguments[i] == "--parse" && i + 2 < arguments.Length) return Path.GetDirectoryName(Path.GetFullPath(arguments[i + 2]));
-            if (arguments[i] is "--ai-chat-smoke" or "--knowledge-smoke" or "--smoke" or "--cloud-smoke"
-                or "--guide-smoke" or "--concepts-smoke" or "--concepts-reading-smoke" or "--desktop-api-smoke"
-                or "--equipment-ux-smoke" or "--history-sync-smoke")
-            {
-                if (i + 1 >= arguments.Length) throw new ArgumentException("自动化检查需要独立输出目录。");
-                return Path.GetFullPath(arguments[i + 1]);
-            }
-        }
-        return null;
     }
 
     internal static DesktopDataLocation Resolve(string baseDirectory, string localAppData, string edition,

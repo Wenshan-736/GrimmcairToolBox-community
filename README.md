@@ -2,7 +2,7 @@
 
 作者：嘟啦嘿。
 
-本目录是社区版桌面界面的公开源码，版本 **0.1.8**，仅构建社区版。桌面应用使用 C#、WPF 和 .NET 10，支持 Windows 10 / 11 x64。AI 对话与本地知识库接口仍属预览功能，后续可能调整。
+本目录是社区版桌面界面的公开源码，版本 **0.1.9**，仅构建社区版。桌面应用使用 C#、WPF 和 .NET 10，支持 Windows 10 / 11 x64。AI 对话与本地知识库接口仍属预览功能，后续可能调整。
 
 ## 编译前补齐两个依赖
 
@@ -19,7 +19,7 @@
 powershell -ExecutionPolicy Bypass -File scripts/copy-installed-dependencies.ps1 -InstallDirectory 'C:\你的社区版安装目录'
 ```
 
-两个文件需来自同一版社区安装包。它们已列入 `.gitignore`，请勿提交到 Git。存档解析 DLL 在程序运行目录根部；`Dependencies` 是源码编译时的引用位置。资料包在编译时嵌入应用程序集，保留 `Data/resources.gcpak` 是为了方便从安装版补齐构建依赖。
+两个文件需来自同一版社区安装包。复制脚本会核对社区安装标识及主程序程序集版本与本工程一致；存档解析 DLL 有独立的组件版本，不能用它推断应用版本。它们已列入 `.gitignore`，请勿提交到 Git。存档解析 DLL 在程序运行目录根部；`Dependencies` 是源码编译时的引用位置。资料包在编译时嵌入应用程序集，保留 `Data/resources.gcpak` 是为了方便从安装版补齐构建依赖。
 
 ## 构建
 
@@ -51,7 +51,9 @@ powershell -ExecutionPolicy Bypass -File scripts/build-community.ps1 -PackageSou
 
 ## 数据与升级
 
-社区安装版将个人数据保存在当前 Windows 用户的 `%LOCALAPPDATA%\Grimmcair\Community`；专用版使用独立目录。没有安装标识的源码构建按便携版方式使用程序旁的 `UserData`。迁入旧便携版记录请使用桌面的导入功能，不要把个人目录加入源码仓库。Windows 加密保存的凭据通常不能直接迁移给其他用户或机器。
+后续面向玩家仅提供安装版。社区安装版默认将个人数据保存在当前 Windows 用户的 `%LOCALAPPDATA%\Grimmcair\Community\data`；专用版使用独立目录。通过设置显式导入旧数据后，实际目录可切换为同一存储根下的已校验目录，升级和卸载保留个人数据。
+
+没有安装标识的源码构建使用程序旁的 `UserData`，这是本地开发运行目录，不是另一种玩家交付版本。迁入旧数据请使用桌面的导入功能，不要把个人目录加入源码仓库。Windows 加密保存的凭据通常不能直接迁移给其他用户或机器。
 
 ## 许可与范围
 

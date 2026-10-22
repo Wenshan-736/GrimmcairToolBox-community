@@ -39,6 +39,20 @@ public sealed class ReplayArchiveCoordinator
 
     public int PendingCount { get { lock (_gate) return _state.Pending.Count; } }
 
+    public void RunWithProcessingPaused(Action update)
+    {
+        lock (_gate) update();
+    }
+
+    /// <summary>Stop future replay association for an ignored branch without touching archived media.</summary>
+    public void RemovePendingSources(IReadOnlySet<string> sourceKeys)
+    {
+        lock (_gate)
+        {
+            if (_state.Pending.RemoveAll(p => sourceKeys.Contains(p.SourceKey)) > 0) SaveState();
+        }
+    }
+
     /// <summary>Call after loading or explicitly saving settings. Pending games survive app restarts.</summary>
     public void Configure(LocalSettings settings)
     {

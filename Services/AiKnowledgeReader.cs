@@ -79,7 +79,9 @@ internal static class AiKnowledgeReader
             return new JsonObject
             {
                 ["summary"] = $"玩家攻略；作者／提供者：{Text(original, "author")}；来源：{Text(original, "sourceName")}；来源版本：{(version.Length > 0 ? version : "未注明")}。不等于本版已核机制。",
-                ["versionNotice"] = original["sourceVersionNotice"]?.DeepClone()
+                ["versionNotice"] = original["sourceVersionNotice"]?.DeepClone(),
+                ["documentRole"] = original["documentRole"]?.DeepClone(),
+                ["documentRoleNotice"] = original["documentRoleNotice"]?.DeepClone()
             };
         }
         var kind = id.Split(':')[0];

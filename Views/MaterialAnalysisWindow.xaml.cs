@@ -15,6 +15,7 @@ public partial class MaterialAnalysisWindow : Window
     private MaterialSynthesisResult synthesis = new();
     private string view = "materials";
     private bool refreshing;
+    private string sourceFingerprint = "";
     public event Action<string>? ItemRequested;
     public MaterialPlanResult CurrentPlan => plan;
     internal IReadOnlyList<MaterialPlanRow> VisibleRows => MaterialRows.Items.OfType<DisplayRow>().Select(x => x.Row).ToList();
@@ -42,7 +43,7 @@ public partial class MaterialAnalysisWindow : Window
     internal bool ChoicesInsideMaterialCard => BranchExpander.Parent is Grid panel && ReferenceEquals(panel, MaterialRows.Parent) && panel.Parent is Border;
     internal int ChoiceImageCount => Descendants<Image>(BranchRows).Count(x => x.Source is not null && x.ActualWidth > 0 && x.ActualHeight > 0);
     internal int EnabledChoiceButtonCount => Descendants<Button>(BranchRows).Count(x => x.IsEnabled && x.IsVisible);
-    internal static bool CanAnalyze(CloudSave? save) => MaterialNeedsExporter.CanAnalyzeLocally(save);
+    internal static bool CanAnalyze(CloudSave? save) => save is { IsIgnored: false } && MaterialNeedsExporter.CanAnalyzeLocally(save);
     internal double HeaderHeight => HeaderPanel.ActualHeight;
     internal double TargetListHeight => TargetScroller.ActualHeight;
     internal double RowViewportHeight => Descendants<ScrollContentPresenter>(MaterialRows).FirstOrDefault()?.ActualHeight ?? 0;
@@ -73,8 +74,24 @@ public partial class MaterialAnalysisWindow : Window
     public MaterialAnalysisWindow(MaterialPlanner planner, GuideCatalog guide, Func<CloudSave?> source)
     {
         this.planner = planner; this.guide = guide; this.source = source;
-        InitializeComponent(); RefreshPlan();
+        InitializeComponent(); InitializeDiagram(); RefreshPlan();
     }
+
+    // Main-window refreshes may run when only the selected catalog item changes.
+    // Avoid rebuilding either route view unless this pinned save actually changed.
+    public void RefreshIfChanged()
+    {
+        if (SourceFingerprint(source()) != sourceFingerprint) RefreshPlan();
+    }
+
+    private static string SourceFingerprint(CloudSave? save) => save is null ? "missing" :
+        System.Text.Json.JsonSerializer.Serialize(new
+        {
+            save.Id, save.OwnerId, save.SourceHash, save.Revision, save.IsMain, save.IsDemo, save.IsIgnored,
+            save.GameAccount, save.Profession, save.Name,
+            Eligible = CanAnalyze(save), save.Targets, save.Inventory,
+            Wardrobe = MaterialNeedsExporter.Wardrobe(save).OrderBy(x => x, StringComparer.Ordinal)
+        });
 
     public void RefreshPlan()
     {
@@ -82,19 +99,24 @@ public partial class MaterialAnalysisWindow : Window
         try
         {
             var save = source();
+            sourceFingerprint = SourceFingerprint(save);
             if (!CanAnalyze(save))
             {
                 plan = new(); synthesis = new(); TargetItems.Children.Clear(); BranchRows.Children.Clear(); BranchExpander.Visibility = Visibility.Collapsed;
                 TreeSchemeBox.ItemsSource = null; SynthesisRoots.Items.Clear();
+                diagramInventory = new Dictionary<string, long>();
+                routeDiagram.SetRoot(null, diagramInventory);
                 TreeExplanation.Text = "请选择当前地图版本的有效存档；未展示旧合成树。";
                 BranchExpander.IsExpanded = false;
                 SaveTitle.Text = save is null ? "该存档已不存在，请关闭后重新选择。" :
+                    save.IsIgnored ? "该存档已忽略并停止同步，请先从已忽略存档中恢复。" :
                     save.IsDemo ? "演示存档不参与真实配方分析。" : "该存档的解析结果或地图版本不适用于当前材料分析。";
                 PlanSummary.Text = "未计算真实配方，请选择当前地图版本的有效游戏存档。";
                 StageFilter.ItemsSource = new[] { "全部阶段" }; StageFilter.SelectedIndex = 0;
                 MaterialRows.ItemsSource = null; return;
             }
             if (save is null) return;
+            Title = $"装备目标 · 材料分析 · {save.GameAccount} / {save.Profession} / {save.Name}";
             SaveTitle.Text = $"{save.GameAccount} · {save.Profession} · {save.Name}（{(save.IsMain ? "主档" : "副档")}）  /  {DateTime.Now:HH:mm:ss} 读取";
             TargetItems.Children.Clear();
             foreach (var goal in save.Targets)
@@ -105,11 +127,15 @@ public partial class MaterialAnalysisWindow : Window
                 var label = $"{item?.Name ?? goal.ItemName} × {goal.Quantity}";
                 content.Children.Add(new TextBlock { Text = label, ToolTip = label, MaxWidth = 260, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center });
                 var button = new Button { Content = content, Margin = new Thickness(0,0,6,4), Padding = new Thickness(7,3,7,3), MinHeight = 30 };
-                button.ToolTip = "点击目标展开合成树；选中树节点后可查看物品信息。";
+                button.ToolTip = "点击目标查看它的合成路线；分析始终使用窗口标题中的存档。";
                 button.Click += (_, _) => ExpandTargetTree(goal.ItemId); TargetItems.Children.Add(button);
             }
             var goals = save.Targets.Select(x => new MaterialGoal(x.ItemId, x.Quantity)).ToList();
             var inventory = MaterialNeedsExporter.Inventory(save); var wardrobe = MaterialNeedsExporter.Wardrobe(save);
+            // Physical inventory counts are separate from the synthesis model's
+            // reusable wardrobe unlock values (0/1).
+            diagramInventory = inventory.GroupBy(x => planner.Canonical(x.Key), StringComparer.Ordinal)
+                .ToDictionary(x => x.Key, x => x.Sum(pair => pair.Value), StringComparer.Ordinal);
             plan = planner.Calculate(goals, inventory, wardrobe);
             synthesis = MaterialSynthesisTree.Build(planner, goals, inventory, wardrobe, plan, preferRecipeView: true);
             TreeSchemeBox.ItemsSource = synthesis.Schemes; TreeSchemeBox.SelectedIndex = synthesis.Schemes.Count > 0 ? 0 : -1;
@@ -214,15 +240,19 @@ public partial class MaterialAnalysisWindow : Window
         BranchExpander.Visibility = view == "materials" && BranchRows.Children.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         SynthesisPanel.Visibility = view == "steps" ? Visibility.Visible : Visibility.Collapsed;
         MaterialRows.Visibility = view == "steps" ? Visibility.Collapsed : Visibility.Visible;
+        PlanSummary.Visibility = view == "steps" && RouteModeToggle.IsChecked == true ? Visibility.Collapsed : Visibility.Visible;
         var targetIds = synthesis.Schemes.FirstOrDefault()?.Targets.Select(x => x.ItemId).ToHashSet(StringComparer.Ordinal) ?? [];
         IEnumerable<MaterialPlanRow> rows = view == "steps" ? plan.Steps.Where(x => targetIds.Contains(x.ItemId)) : view == "allocations" ? plan.Allocations : plan.Materials;
         if (MissingOnly.IsChecked == true && view == "materials") rows = rows.Where(x => x.Missing > 0);
         if (StageFilter.SelectedItem is string stage && stage != "全部阶段") rows = rows.Where(x => (string.IsNullOrEmpty(x.Stage) ? "未标注阶段" : x.Stage) == stage);
         MaterialRows.ItemsSource = rows.OrderByDescending(x => x.StageRank).ThenByDescending(x => x.Missing).ThenBy(x => x.Name).Select(x => new DisplayRow(x, planner)).ToList();
-        MissingOnly.IsEnabled = view == "materials";
-        if (view == "steps") RenderSynthesisTree();
+        MissingOnly.Visibility = view == "materials" ? Visibility.Visible : Visibility.Collapsed;
+        RouteModePicker.Visibility = view == "steps" ? Visibility.Visible : Visibility.Collapsed;
+        if (view == "steps") RenderRoutes();
         foreach (var button in ViewButtons.Children.OfType<Button>()) button.Style = (Style)FindResource((string?)button.Tag == view ? "PrimaryButton" : typeof(Button));
-        RowDetails.Text = view == "steps" ? "点击目标展开合成树；选中节点可查看当前档抵扣、配方限制与物品信息。" : "选择材料可查看用途路径、获取信息与合成限制。"; OpenItemButton.IsEnabled = false;
+        RowDetails.Text = view == "steps" ? RouteModeToggle.IsChecked == true ?
+            "图标下方仅为当前档持有件数；点击图标查看物品，＋／−展开或收起。衣柜解锁状态见悬停提示。" :
+            "点击目标展开合成树；选中节点可查看当前档抵扣、配方限制与物品信息。" : "选择材料可查看用途路径、获取信息与合成限制。"; OpenItemButton.IsEnabled = false;
     }
 
     private void MaterialRows_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -256,6 +286,7 @@ public partial class MaterialAnalysisWindow : Window
         StageFilter.SelectedIndex = 0;
         ShowView("steps");
         var id = planner.Canonical(itemId);
+        if (RouteModeToggle.IsChecked == true) return SelectDiagramTarget(id);
         var target = SynthesisRoots.Items.OfType<TreeViewItem>().FirstOrDefault(x => x.Tag is MaterialSynthesisNode node && node.ItemId == id);
         if (target is null) return false;
         target.IsExpanded = true; target.IsSelected = true; BringSynthesisTargetIntoView(target); return true;
@@ -319,7 +350,7 @@ public partial class MaterialAnalysisWindow : Window
     }
     private void TreeScheme_Changed(object sender, SelectionChangedEventArgs e)
     {
-        if (!refreshing && view == "steps") RenderSynthesisTree();
+        if (!refreshing && view == "steps") RenderRoutes();
     }
     private void RenderSynthesisTree()
     {
@@ -430,7 +461,7 @@ public partial class MaterialAnalysisWindow : Window
         if (view == "steps" && SynthesisRoots.SelectedItem is TreeViewItem { Tag: MaterialSynthesisNode { IsRecipe: false } node }) RequestItem(node.ItemId);
         else if (MaterialRows.SelectedItem is DisplayRow row) RequestItem(row.Row.ItemId);
     }
-    private void RequestItem(string id) { Close(); ItemRequested?.Invoke(id); }
+    private void RequestItem(string id) => ItemRequested?.Invoke(id);
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
     private sealed class DisplayRow(MaterialPlanRow row, MaterialPlanner planner)
     {

@@ -74,8 +74,18 @@ public sealed class SaveArchiveService : IDisposable
     private Task? _watchDrainTask;
     private bool _acceptWatchEvents, _resumeAfterFlush;
     private bool _disposed;
+    private readonly Dictionary<string, JsonObject> _verifiedParsed = new(StringComparer.Ordinal);
+    public Func<string, string, JsonObject, bool>? ShouldIgnoreSource { get; set; }
+    public event EventHandler<RenamedEventArgs>? SourceRenamed;
 
     public event EventHandler<SaveArchiveScanResult>? ScanCompleted;
+
+    public async Task RunBetweenScansAsync(Action update)
+    {
+        await _scanGate.WaitAsync();
+        try { update(); }
+        finally { _scanGate.Release(); }
+    }
 
     public SaveArchiveService(string manifestPath, Func<byte[], string, JsonObject> parser, Func<DateTime>? localClock = null)
     {
@@ -85,7 +95,21 @@ public sealed class SaveArchiveService : IDisposable
     }
 
     public Task<SaveArchiveScanResult> ScanAsync(LocalSettings settings, CancellationToken cancellationToken = default) =>
-        ScanCoreAsync(settings.Normalize(), false, cancellationToken);
+        Task.Run(() => ScanCoreAsync(settings.Normalize(), false, cancellationToken), cancellationToken);
+
+    /// <summary>Reuse only the parsed version whose complete source hash was previously accepted.</summary>
+    public void SeedVerifiedSnapshots(IEnumerable<CloudSave> saves)
+    {
+        foreach (var save in saves.Where(x => !x.IsDemo && !x.SourceDetached && x.ParsedResult is not null
+                     && x.SourceHash.Length == 64 && x.SourceHash == x.AcceptedSourceHash
+                     && x.ParsedResult["source"]?["sha256"]?.ToString() == x.SourceHash))
+            try
+            {
+                var key = JsonSerializer.Deserialize<string[]>(save.SourceKey);
+                if (key is { Length: 4 }) _verifiedParsed[key[0] + "\n" + save.SourceHash] = save.ParsedResult!.DeepClone().AsObject();
+            }
+            catch (JsonException) { }
+    }
 
     private async Task<SaveArchiveScanResult> ScanCoreAsync(LocalSettings settings, bool fromWatcher, CancellationToken cancellationToken)
     {
@@ -113,12 +137,20 @@ public sealed class SaveArchiveService : IDisposable
                 cancellationToken.ThrowIfCancellationRequested();
                 try
                 {
-                    var snapshot = await ReadStableSnapshotAsync(sourcePath, cancellationToken).ConfigureAwait(false);
-                    var raw = snapshot.Bytes;
                     var sourceName = Path.GetFileName(sourcePath);
-                    var parsed = _parse(raw, sourceName);
-                    var input = SaveInput.Parse(raw, sourceName, preferEmbeddedUsername: true);
+                    var snapshot = await ReadStableSnapshotAsync(sourcePath, cancellationToken, knownHash =>
+                        _verifiedParsed.ContainsKey(sourceName.ToUpperInvariant() + "\n" + knownHash)).ConfigureAwait(false);
+                    var raw = snapshot.Bytes;
                     var hash = Convert.ToHexStringLower(SHA256.HashData(raw));
+                    var cacheKey = sourceName.ToUpperInvariant() + "\n" + hash;
+                    if (!_verifiedParsed.TryGetValue(cacheKey, out var verified))
+                    {
+                        verified = _parse(raw, sourceName);
+                        _verifiedParsed[cacheKey] = verified.DeepClone().AsObject();
+                    }
+                    var parsed = verified.DeepClone().AsObject();
+                    var input = SaveInput.Parse(raw, sourceName, preferEmbeddedUsername: true);
+                    if (ShouldIgnoreSource?.Invoke(sourcePath, input.Username, parsed) == true) continue;
                     var kind = parsed["kind"]?.GetValue<string>() ?? throw new InvalidDataException("解析结果缺少存档类型。");
                     var key = BuildLogicalSourceKey(sourcePath, input.Username, parsed);
                     var saveName = SanitizeName(Path.GetFileNameWithoutExtension(sourceName));
@@ -191,7 +223,11 @@ public sealed class SaveArchiveService : IDisposable
             };
             _watcher.Changed += (_, _) => ScheduleScan(settings, generation);
             _watcher.Created += (_, _) => ScheduleScan(settings, generation);
-            _watcher.Renamed += (_, _) => ScheduleScan(settings, generation);
+            _watcher.Renamed += (_, e) =>
+            {
+                SourceRenamed?.Invoke(this, e);
+                ScheduleScan(settings, generation);
+            };
             _watcher.Error += (_, _) => ScheduleScan(settings, generation);
             _watcher.EnableRaisingEvents = true;
         }
@@ -257,6 +293,9 @@ public sealed class SaveArchiveService : IDisposable
             }
             _acceptWatchEvents = false;
             _resumeAfterFlush = resume;
+            // The unconditional final pass covers queued events; only cancel their debounce wait.
+            // An in-flight decode/commit uses the lifetime token and is still fully drained.
+            _debounce?.Cancel();
             if (_watcher is not null) _watcher.EnableRaisingEvents = false;
             if (!resume) { _watcher?.Dispose(); _watcher = null; }
             var generation = _watchLifetime;
@@ -370,13 +409,16 @@ public sealed class SaveArchiveService : IDisposable
 
     private sealed record StableSnapshot(byte[] Bytes, DateTimeOffset WrittenAt);
 
-    private static async Task<StableSnapshot> ReadStableSnapshotAsync(string path, CancellationToken token)
+    private static async Task<StableSnapshot> ReadStableSnapshotAsync(string path, CancellationToken token, Func<string, bool>? isVerified = null)
     {
         for (var attempt = 0; attempt < 4; attempt++)
         {
             try
             {
                 var first = ReadSnapshot(path);
+                // Always read and hash actual bytes, even when timestamps and size are unchanged.
+                // A complete previously decoded snapshot needs no second settling delay or parse.
+                if (isVerified?.Invoke(Convert.ToHexStringLower(SHA256.HashData(first.Bytes))) == true) return first;
                 await Task.Delay(120, token).ConfigureAwait(false);
                 var second = ReadSnapshot(path);
                 if (first.WrittenAt == second.WrittenAt && first.Bytes.AsSpan().SequenceEqual(second.Bytes)) return second;

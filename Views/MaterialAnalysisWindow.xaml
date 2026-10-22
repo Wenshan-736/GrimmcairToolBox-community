@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:services="clr-namespace:Grimmcair.Desktop.Services"
         Title="装备目标 · 材料分析" Width="1120" Height="790" MinWidth="850" MinHeight="600"
-        WindowStartupLocation="CenterOwner" ShowInTaskbar="False" Background="#E4D1AA"
+        WindowStartupLocation="CenterScreen" ShowInTaskbar="True" Background="#E4D1AA"
         FontFamily="Microsoft YaHei UI" FontSize="13" UseLayoutRounding="True" SizeChanged="AnalysisWindow_SizeChanged">
     <Window.Resources><ResourceDictionary>
         <ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Theme.xaml" /></ResourceDictionary.MergedDictionaries>
@@ -25,6 +25,25 @@
             <Grid><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                 <DockPanel Margin="0,0,0,8">
                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                        <StackPanel x:Name="RouteModePicker" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0" Visibility="Collapsed">
+                            <TextBlock Text="列表" VerticalAlignment="Center" Margin="0,0,7,0" />
+                            <ToggleButton x:Name="RouteModeToggle" Width="46" Height="25" IsChecked="False" Checked="RouteMode_Changed" Unchecked="RouteMode_Changed"
+                                          ToolTip="切换合成路线的列表与路线图显示" AutomationProperties.Name="显示合成路线图">
+                                <ToggleButton.Template><ControlTemplate TargetType="ToggleButton">
+                                    <Border x:Name="Track" CornerRadius="13" Background="#C6AF88" BorderBrush="#AE8B5F" BorderThickness="1">
+                                        <Ellipse x:Name="Thumb" Width="19" Height="19" Fill="#FFF8E8" HorizontalAlignment="Left" Margin="3,0" />
+                                    </Border>
+                                    <ControlTemplate.Triggers><Trigger Property="IsChecked" Value="True">
+                                        <Setter TargetName="Track" Property="Background" Value="#8B4D28" />
+                                        <Setter TargetName="Thumb" Property="HorizontalAlignment" Value="Right" />
+                                    </Trigger><Trigger Property="IsKeyboardFocused" Value="True">
+                                        <Setter TargetName="Track" Property="BorderBrush" Value="#4F3523" />
+                                        <Setter TargetName="Track" Property="BorderThickness" Value="2" />
+                                    </Trigger></ControlTemplate.Triggers>
+                                </ControlTemplate></ToggleButton.Template>
+                            </ToggleButton>
+                            <TextBlock Text="路线图" VerticalAlignment="Center" Margin="7,0,0,0" />
+                        </StackPanel>
                         <CheckBox x:Name="MissingOnly" Content="只看缺少" IsChecked="True" VerticalAlignment="Center" Margin="0,0,18,0" Checked="Filter_Changed" Unchecked="Filter_Changed" />
                         <ComboBox x:Name="StageFilter" Width="140" SelectionChanged="Filter_Changed" AutomationProperties.Name="材料阶段筛选" />
                     </StackPanel>
@@ -68,6 +87,11 @@
                     <TreeView x:Name="SynthesisRoots" Grid.Row="1" Background="#F9EDCE" BorderBrush="#CEAF7C" BorderThickness="1" Padding="8"
                               ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="False"
                               SelectedItemChanged="SynthesisSelection_Changed" AutomationProperties.Name="目标装备合成树" />
+                    <ScrollViewer x:Name="DiagramScroll" Grid.Row="1" Visibility="Collapsed" Background="#F9EDCE" BorderBrush="#CEAF7C" BorderThickness="1" Padding="16"
+                                  HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" CanContentScroll="False"
+                                  AutomationProperties.Name="当前存档的装备合成路线图">
+                        <ContentControl x:Name="DiagramHost" HorizontalAlignment="Center" VerticalAlignment="Top" />
+                    </ScrollViewer>
                 </Grid>
                 <Grid Grid.Row="4" MaxHeight="56" Margin="0,6,0,0"><Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                     <ScrollViewer MaxHeight="56" VerticalScrollBarVisibility="Auto" Margin="0,0,14,0"><TextBlock x:Name="RowDetails" Style="{StaticResource MutedText}" LineHeight="18" Text="选择材料可查看用途路径、获取信息与合成限制。" /></ScrollViewer>

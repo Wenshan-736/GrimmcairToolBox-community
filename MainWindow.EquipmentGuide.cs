@@ -12,9 +12,9 @@ public partial class MainWindow
     private Dictionary<string, EquipmentGuideItem> _equipmentExplanations = [];
     private Dictionary<string, string> _equipmentExplanationSearch = [];
 
-    private void InitializeEquipmentGuide()
+    private void InitializeEquipmentGuide(EquipmentGuideCatalog? guide = null)
     {
-        _equipmentGuide = EquipmentGuideCatalog.Load();
+        _equipmentGuide = guide ?? EquipmentGuideCatalog.Load();
         if (_equipmentGuide.Items.Any(item => !_byId.TryGetValue(item.Id, out var catalogItem) ||
                 catalogItem.Category != "装备"))
             throw new InvalidDataException("装备说明与物品目录不匹配。");

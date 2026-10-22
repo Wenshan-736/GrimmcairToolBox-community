@@ -7,6 +7,11 @@ namespace Grimmcair.Desktop;
 
 public partial class MainWindow
 {
+    private const string EquipmentTargetDragFormat = "Grimmcair.EquipmentTarget";
+    private sealed record TargetDrag(string OwnerId, string SaveId, string ItemId);
+    private Point _targetDragStart;
+    private Button? _targetDragButton;
+    private bool _draggingTarget;
     private static List<GuideTextRun> ReadItemRuns(System.Text.Json.Nodes.JsonNode? node) =>
         node is System.Text.Json.Nodes.JsonArray runs ? runs.Select(run => new GuideTextRun
             { Text = run?["text"]?.ToString() ?? "", Color = run?["color"]?.ToString() ?? "" }).ToList() : [];
@@ -27,18 +32,26 @@ public partial class MainWindow
             {
                 var item = _byId.GetValueOrDefault(goal.ItemId);
                 var label = $"{item?.Name ?? goal.ItemName} × {goal.Quantity}";
-                var content = new StackPanel { Orientation = Orientation.Horizontal };
-                content.Children.Add(new Image { Source = LoadImage(item?.IconPath ?? ""), Width = 23, Height = 23,
-                    Margin = new Thickness(0, 0, 6, 0) });
-                content.Children.Add(new TextBlock { Text = label, MaxWidth = 155, TextTrimming = TextTrimming.CharacterEllipsis,
-                    VerticalAlignment = VerticalAlignment.Center });
-                var button = new Button { Content = content, Tag = goal.ItemId, Padding = new Thickness(6, 3, 6, 3),
-                    MinHeight = 29, Margin = new Thickness(0, 0, 5, 3), ToolTip = label + "\n点击查看装备，右键取消目标。" };
-                button.Click += (_, _) => OpenRelatedItem(goal.ItemId);
-                var menu = new ContextMenu();
-                var remove = new MenuItem { Header = "取消目标", Tag = goal.ItemId };
-                remove.Click += (_, _) => ChangeEquipmentTarget(goal.ItemId, false, save.Id);
-                menu.Items.Add(remove); button.ContextMenu = menu;
+                var button = new Button { Content = new Image { Source = LoadImage(item?.IconPath ?? ""), Width = 34, Height = 34 },
+                    Tag = goal.ItemId, Padding = new Thickness(3), Width = 42, Height = 42,
+                    Margin = new Thickness(0, 0, 5, 3), ToolTip = label + "\n左键查看 · 右键取消 · 拖动排序" };
+                System.Windows.Automation.AutomationProperties.SetName(button, label);
+                button.Click += (_, _) => { if (!_draggingTarget) OpenRelatedItem(goal.ItemId); };
+                button.PreviewMouseRightButtonDown += (_, e) => { e.Handled = true; ChangeEquipmentTarget(goal.ItemId, false, save.Id); };
+                button.PreviewMouseLeftButtonDown += (_, e) => { _targetDragStart = e.GetPosition(EquipmentTargetItems); _targetDragButton = button; };
+                button.PreviewMouseLeftButtonUp += (_, _) => { if (!_draggingTarget) _targetDragButton = null; };
+                button.LostMouseCapture += (_, _) => { if (!_draggingTarget) _targetDragButton = null; };
+                button.PreviewMouseMove += (_, e) =>
+                {
+                    if (_targetDragButton != button || e.LeftButton != MouseButtonState.Pressed || _draggingTarget) return;
+                    var delta = e.GetPosition(EquipmentTargetItems) - _targetDragStart;
+                    if (Math.Abs(delta.X) < SystemParameters.MinimumHorizontalDragDistance && Math.Abs(delta.Y) < SystemParameters.MinimumVerticalDragDistance) return;
+                    _draggingTarget = true;
+                    button.ReleaseMouseCapture();
+                    try { DragDrop.DoDragDrop(button, new DataObject(EquipmentTargetDragFormat, new TargetDrag(save.OwnerId, save.Id, goal.ItemId)), DragDropEffects.Move); }
+                    finally { _targetDragButton = null; _draggingTarget = false; }
+                    e.Handled = true;
+                };
                 EquipmentTargetItems.Children.Add(button);
             }
         }
@@ -52,19 +65,7 @@ public partial class MainWindow
 
     private void RefreshEquipmentContextMenu()
     {
-        EquipmentList.ContextMenu ??= new ContextMenu();
-        var menu = EquipmentList.ContextMenu;
-        menu.Items.Clear();
-        var item = EquipmentList.SelectedItem as CatalogItem;
-        var choice = TargetSaveBox.SelectedItem as TargetSaveChoice;
-        var save = choice is null ? null : _simulation?.FindSave(choice.OwnerId, choice.Id);
-        var already = item is not null && save?.Targets.Any(goal => goal.ItemId == item.Id) == true;
-        var action = new MenuItem { Header = already ? "取消目标" : "加入当前档目标", Tag = item?.Id,
-            IsEnabled = item is { Category: "装备" } && save is not null,
-            ToolTip = save is null ? "请先选择目标所属存档。" : item?.Category != "装备" ? "目标只接受装备成品。" : null };
-        if (item is not null && save is not null)
-            action.Click += (_, _) => ChangeEquipmentTarget(item.Id, !already, save.Id);
-        menu.Items.Add(action);
+        EquipmentList.ContextMenu = null;
     }
 
     private void EquipmentList_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
@@ -73,10 +74,38 @@ public partial class MainWindow
         if (row is null) { e.Handled = true; return; }
         row.IsSelected = true;
         row.Focus();
-        RefreshEquipmentContextMenu();
+        if (row.DataContext is CatalogItem item && TargetSaveBox.SelectedItem is TargetSaveChoice choice &&
+            _simulation?.FindSave(choice.OwnerId, choice.Id) is { } save)
+            ChangeEquipmentTarget(item.Id, !save.Targets.Any(goal => goal.ItemId == item.Id), save.Id);
+        e.Handled = true;
     }
 
-    private void EquipmentList_ContextMenuOpening(object sender, ContextMenuEventArgs e) => RefreshEquipmentContextMenu();
+    private void EquipmentList_ContextMenuOpening(object sender, ContextMenuEventArgs e) => e.Handled = true;
+
+    private void EquipmentTargets_DragOver(object sender, DragEventArgs e)
+    {
+        e.Effects = e.Data.GetData(EquipmentTargetDragFormat) is TargetDrag drag && TargetSaveBox.SelectedItem is TargetSaveChoice choice
+            && drag.OwnerId == choice.OwnerId && drag.SaveId == choice.Id ? DragDropEffects.Move : DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    private void EquipmentTargets_Drop(object sender, DragEventArgs e)
+    {
+        e.Handled = true;
+        if (e.Data.GetData(EquipmentTargetDragFormat) is not TargetDrag drag || TargetSaveBox.SelectedItem is not TargetSaveChoice choice
+            || drag.OwnerId != choice.OwnerId || drag.SaveId != choice.Id || _simulation?.FindSave(choice.OwnerId, choice.Id) is not { } save) return;
+        var position = e.GetPosition(EquipmentTargetItems);
+        var before = EquipmentTargetItems.Children.OfType<Button>().FirstOrDefault(button =>
+        {
+            var top = button.TranslatePoint(new Point(), EquipmentTargetItems);
+            return position.Y <= top.Y + button.ActualHeight && (position.Y < top.Y || position.X < top.X + button.ActualWidth / 2);
+        })?.Tag as string;
+        if (before == drag.ItemId) return;
+        var order = save.Targets.Select(goal => goal.ItemId).Where(id => id != drag.ItemId).ToList();
+        var index = before is null ? order.Count : order.IndexOf(before);
+        order.Insert(index < 0 ? order.Count : index, drag.ItemId);
+        RunSimulationAction(() => _simulation.ReorderTargets(choice.OwnerId, choice.Id, order));
+    }
 
     private void ChangeEquipmentTarget(string itemId, bool add, string? expectedSaveId = null)
     {

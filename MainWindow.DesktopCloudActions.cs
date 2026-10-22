@@ -12,6 +12,7 @@ public partial class MainWindow
         ? save : throw new InvalidOperationException("请先选择一份真实角色存档。");
 
     private IReadOnlySet<string> LiveLocalSaveIds() => _simulation!.State.Saves
+        // Ignored records still own their bindings; hiding them must not make their cloud slots orphaned.
         .Where(save => save.OwnerId == CloudSimulation.PreviewOwnerId && !save.IsDemo)
         .Select(save => save.Id).ToHashSet(StringComparer.Ordinal);
 
@@ -53,6 +54,7 @@ public partial class MainWindow
         if (_simulation is null || _desktopSession?.IsAllowed != true) return;
         if (_desktopSync is null) await ReadDesktopCloudAsync();
         await ReadDesktopCloudAsync();
+        await FinishIgnoredCloudStopsAsync();
         if (manual)
         {
             if (!await ConfirmRemoteSharingAsync()) return;
@@ -66,6 +68,7 @@ public partial class MainWindow
         await RecoverDesktopOperationsAsync(selectedLocalId);
         var updated = 0;
         foreach (var save in _simulation.State.Saves.Where(s => s.OwnerId == CloudSimulation.PreviewOwnerId && !s.IsDemo
+                     && !s.IsIgnored
                      && (selectedLocalId is null || s.Id == selectedLocalId)).ToList())
         {
             if (_closing || _desktopSession?.IsAllowed != true) break;
@@ -178,6 +181,12 @@ public partial class MainWindow
         foreach (var committed in _desktopSync.Account.CommittedMainTransfers.Where(Related).ToList()) ApplyCommittedRemoteMain(committed);
         foreach (var operation in _desktopSync.Account.PendingOperations.Where(Related).ToList())
         {
+            if (_desktopSync.GetBinding(operation.LocalSaveId).StopRequestedByIgnore
+                && !(operation.Kind == "sync-state" && JsonNode.Parse(operation.BodyJson)?["enabled"]?.GetValue<bool>() == false))
+            {
+                await _desktopSync.RecoverIgnoredOperationAsync(operation, SendDesktopAsync, _desktopLifetime.Token);
+                continue;
+            }
             if ((operation.Status is "conflict" or "failed" or "rejected") && !operation.MustQueryReceipt) continue;
             try { await _desktopSync.ExecuteAsync(operation, SendDesktopAsync, _desktopLifetime.Token, recoverTerminalReceipt: true); }
             catch (DesktopApiException) when ((operation.Status is "conflict" or "failed" or "rejected") && !operation.MustQueryReceipt)
@@ -353,8 +362,53 @@ public partial class MainWindow
     private bool ApplyCommittedRemoteMain(DesktopCloudOperation operation)
     {
         if (_simulation?.FindSave(CloudSimulation.PreviewOwnerId, operation.LocalSaveId) is not { } save) return false;
+        if (save.IsIgnored || _desktopSync!.GetBinding(save.Id).StopRequestedByIgnore)
+        { _desktopSync!.CompleteLocalMainTransfer(operation.RequestId); return false; }
         _simulation.SetMain(save.OwnerId, save.Id);
         return _desktopSync!.CompleteLocalMainTransfer(operation.RequestId, CurrentLocalSave(save.Id));
+    }
+
+    private async Task FinishIgnoredCloudStopsAsync()
+    {
+        if (_desktopSync is null || _simulation is null) return;
+        foreach (var binding in _desktopSync.Account.Bindings.Where(x => x.StopRequestedByIgnore && !x.Deleted).ToList())
+        {
+            try
+            {
+                if (!_desktopSync.Account.PendingOperations.Any(x => x.LocalSaveId == binding.LocalSaveId)
+                    && !_desktopSync.Account.CommittedMainTransfers.Any(x => x.LocalSaveId == binding.LocalSaveId)
+                    && RemoteSave(binding.LocalSaveId)?["syncEnabled"]?.GetValue<bool>() != true)
+                {
+                    var changed = binding.AcceptedSyncEnabled || binding.LastError.Length > 0 || binding.Status != "disabled";
+                    binding.AcceptedSyncEnabled = false; binding.LastError = ""; binding.Status = "disabled";
+                    if (changed) _desktopSync.Save();
+                    continue;
+                }
+                var unresolved = false;
+                foreach (var operation in _desktopSync.Account.PendingOperations.Where(x => x.LocalSaveId == binding.LocalSaveId).ToList())
+                {
+                    if (operation.Kind == "sync-state" && JsonNode.Parse(operation.BodyJson)?["enabled"]?.GetValue<bool>() == false)
+                    {
+                        if (DesktopCloudSync.IsKnownFailedOperation(operation) && !operation.MustQueryReceipt)
+                            _desktopSync.DiscardFailedOperation(operation.RequestId);
+                        else await _desktopSync.ExecuteAsync(operation, SendDesktopAsync, _desktopLifetime.Token, recoverTerminalReceipt: true);
+                    }
+                    else if (!await _desktopSync.RecoverIgnoredOperationAsync(operation, SendDesktopAsync, _desktopLifetime.Token)) unresolved = true;
+                }
+                foreach (var operation in _desktopSync.Account.CommittedMainTransfers.Where(x => x.LocalSaveId == binding.LocalSaveId).ToList())
+                    _desktopSync.CompleteLocalMainTransfer(operation.RequestId);
+                if (unresolved) continue;
+                await ReadDesktopCloudAsync();
+                var remote = RemoteSave(binding.LocalSaveId);
+                if (remote is null || remote["syncEnabled"]?.GetValue<bool>() == false)
+                { binding.AcceptedSyncEnabled = false; binding.LastError = ""; binding.Status = "disabled"; _desktopSync.Save(); continue; }
+                var stop = _desktopSync.PrepareSyncState(binding.LocalSaveId, remote, false, acceptRemoteChanges: true);
+                await _desktopSync.ExecuteAsync(stop, SendDesktopAsync, _desktopLifetime.Token);
+                await ReadDesktopCloudAsync();
+            }
+            catch (Exception error) when (IsDesktopError(error))
+            { _desktopSync.RecordFailure(binding.LocalSaveId, "本机已停止同步，云端停止状态待确认：" + error.Message); }
+        }
     }
 
     private static List<CloudGoal> ReadRemoteGoals(JsonArray goals) => goals.Select(n => new CloudGoal

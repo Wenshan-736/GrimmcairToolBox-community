@@ -10,6 +10,7 @@ public sealed class ConceptCatalog
     public string MapSha256 { get; init; } = "";
     public string ScriptSha256 { get; init; } = "";
     public List<ConceptSection> Sections { get; init; } = [];
+    public List<ConceptGuideSourceCard> GuideSources { get; init; } = [];
     public List<DropCalculatorProfile> CalculatorProfiles { get; init; } = [];
 
     public static ConceptCatalog Load()
@@ -53,6 +54,11 @@ public sealed class ConceptCatalog
                     entry.PlayerGuideSource is null || string.IsNullOrWhiteSpace(entry.PlayerGuideSource.SourceId) ||
                     entry.PlayerGuideSource.CurrentMapApplicabilityVerified))
                     throw new InvalidDataException("玩家攻略缺少作者或版本边界，不能作为本版实测资料加载。");
+                if (entry.SourceKind == "player_guide" && (entry.DocumentRole is not ("" or "player_reading" or
+                        "boss_mechanics_and_tactics" or "illustration_notes" or "preparation" or
+                        "navigation_and_summary" or "external_link_index") ||
+                        entry.DocumentRole.Length > 0 && string.IsNullOrWhiteSpace(entry.DocumentRoleNotice)))
+                    throw new InvalidDataException("玩家攻略缺少有效的文档角色或阅读范围说明。");
                 if (entry.Paragraphs is null || entry.Examples is null || entry.Formulas is null || entry.Effects is null ||
                     entry.Paragraphs.Any(x => x is null) || entry.Examples.Any(x => x is null) || entry.Formulas.Any(x => x is null))
                     throw new InvalidDataException("基础概念资料包含无效内容。");
@@ -76,6 +82,13 @@ public sealed class ConceptCatalog
         var allEntries = concepts.Sections.SelectMany(section => section.Entries).ToArray();
         if (allEntries.Select(entry => entry.Id).Distinct(StringComparer.Ordinal).Count() != allEntries.Length)
             throw new InvalidDataException("基础概念资料包含跨分类重复条目。");
+        if (concepts.GuideSources is null || concepts.GuideSources.Any(card => card is null ||
+                string.IsNullOrWhiteSpace(card.SourceId) || string.IsNullOrWhiteSpace(card.Title) ||
+                string.IsNullOrWhiteSpace(card.Author) || string.IsNullOrWhiteSpace(card.Introduction) ||
+                !ConceptGuideSourceCard.TrySourceUri(card.Url, out _) ||
+                !allEntries.Any(entry => entry.PlayerGuideSource?.SourceId == card.SourceId)) ||
+            concepts.GuideSources.Select(card => card.SourceId).Distinct(StringComparer.Ordinal).Count() != concepts.GuideSources.Count)
+            throw new InvalidDataException("攻略来源清单包含重复来源、缺少简介或无效原文链接。");
         if (concepts.CalculatorProfiles is null || concepts.CalculatorProfiles.Any(profile => profile is null) ||
             concepts.CalculatorProfiles.Select(profile => profile.Id).Distinct(StringComparer.Ordinal).Count() != concepts.CalculatorProfiles.Count)
             throw new InvalidDataException("掉落计算资料包含空白或重复首领。");
@@ -101,6 +114,24 @@ public sealed class ConceptSection
     public List<ConceptEntry> Entries { get; init; } = [];
 }
 
+public sealed class ConceptGuideSourceCard
+{
+    public string SourceId { get; init; } = "";
+    public string Title { get; init; } = "";
+    public string Author { get; init; } = "";
+    public string? SourceMapVersion { get; init; }
+    public string Introduction { get; init; } = "";
+    public string Url { get; init; } = "";
+
+    public static bool TrySourceUri(string? value, out Uri? uri)
+    {
+        uri = null;
+        return !string.IsNullOrWhiteSpace(value) && value.Length <= 4096 && !value.Any(char.IsControl)
+            && Uri.TryCreate(value, UriKind.Absolute, out uri) && uri.Scheme == Uri.UriSchemeHttps
+            && uri.Host.Length > 0 && uri.UserInfo.Length == 0;
+    }
+}
+
 public sealed class ConceptEntry
 {
     public string Id { get; init; } = "";
@@ -110,6 +141,9 @@ public sealed class ConceptEntry
     public string SearchTags { get; init; } = "";
     public string SourceKind { get; init; } = "";
     public string Author { get; init; } = "";
+    public string AuthorDisplayName { get; init; } = "";
+    public string DocumentRole { get; init; } = "";
+    public string DocumentRoleNotice { get; init; } = "";
     public string SourceName { get; init; } = "";
     public string? SourceMapVersion { get; init; }
     public string SourceStatus { get; init; } = "";

@@ -99,6 +99,7 @@ public sealed class DesktopCloudSync
         RequireBinding(binding);
         if (binding.Deleted && enabled) throw new InvalidOperationException("这个云档已删除，请先读取云列表并重新建立关联。本地存档与历史仍保留。");
         binding.Enabled = enabled;
+        if (enabled) binding.StopRequestedByIgnore = false;
         if (!Account.PendingOperations.Any(x => x.LocalSaveId == binding.LocalSaveId))
             binding.Status = enabled ? "pending" : "disabled";
         store.Save();
@@ -107,6 +108,43 @@ public sealed class DesktopCloudSync
     {
         var binding = GetBinding(localSaveId);
         binding.LastError = message; binding.Status = "failed"; store.Save();
+    }
+
+    public void StopForIgnoredSave(string localSaveId) => store.StopLocalSaveSync(localSaveId);
+
+    /// <summary>Recover evidence only; never resend a content/main/delete request after local opt-out.</summary>
+    public async Task<bool> RecoverIgnoredOperationAsync(DesktopCloudOperation operation,
+        Func<string, string, string?, CancellationToken, Task<JsonObject>> sendAsync, CancellationToken cancellation = default)
+    {
+        await execution.WaitAsync(cancellation);
+        try
+        {
+            ValidateOperation(operation);
+            var binding = GetBinding(operation.LocalSaveId);
+            if (!binding.StopRequestedByIgnore) throw new InvalidOperationException("这份存档尚未标记停止同步。");
+            if (operation.MustQueryReceipt)
+            {
+                JsonObject receipt;
+                try { receipt = await sendAsync("GET", $"/api/desktop/operations/{operation.RequestId}", null, cancellation); }
+                catch (DesktopApiException error) when (error.StatusCode == 404 && error.Code == "operation_not_found")
+                {
+                    // A previous write might still finish late. Retain the journal and retry receipt-only later.
+                    binding.LastError = "本机已停止同步；旧请求结果仍待确认，未重发内容。";
+                    store.Save();
+                    return false;
+                }
+                ApplyReceipt(operation, receipt);
+                if (operation.Kind == "main-switch") CompleteLocalMainTransfer(operation.RequestId);
+                return true;
+            }
+            var before = JsonSerializer.Serialize(Account, Json);
+            Account.PendingOperations.Remove(operation);
+            operation.Status = "cancelled";
+            Account.RetiredFailedOperations.Add(operation);
+            try { store.Save(); } catch { RestoreAccount(before); throw; }
+            return true;
+        }
+        finally { execution.Release(); }
     }
     public string ProfessionId(CloudSave save) => professionIds.TryGetValue(save.Profession, out var id) ? id
         : throw new InvalidDataException("存档职业与当前职业字典没有精确对应，未上传。");
@@ -868,6 +906,9 @@ public sealed class DesktopCloudSync
         try
         {
             ValidateOperation(operation);
+            if (GetBinding(operation.LocalSaveId).StopRequestedByIgnore
+                && !(operation.Kind == "sync-state" && Parse(operation.BodyJson)["enabled"]?.GetValue<bool>() == false))
+                throw new DesktopCloudConflictException("这份存档已停止同步，旧请求只能查询回执，不能重新发送。");
             if (IsKnownFailedOperation(operation) && !(recoverTerminalReceipt && operation.MustQueryReceipt))
                 throw new DesktopCloudConflictException("这次操作需要先处理失败或冲突，未自动重试。");
             cancellation.ThrowIfCancellationRequested();
@@ -1133,6 +1174,7 @@ public sealed class DesktopCloudSync
 
     private void ValidateSave(CloudSave save)
     {
+        if (save.IsIgnored) throw new InvalidOperationException("请先恢复已忽略的存档，再执行云操作。");
         if (save.IsDemo || save.ParsedResult?["kind"]?.ToString() != "character"
             || save.ParsedResult?["map_profile"]?["script_sha256"]?.ToString() != SaveProfile.ScriptSha256)
             throw new InvalidDataException("仅支持当前地图的真实角色存档，账号徽章档不能上传。");

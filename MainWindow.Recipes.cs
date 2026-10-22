@@ -186,6 +186,7 @@ public partial class MainWindow
     {
         SearchBox.Text = "";
         CategoryBox.SelectedIndex = 0;
+        EquipmentStageBox.SelectedIndex = 0;
         SelectEquipment(id);
         DetailTabs.SelectedIndex = 1;
         MainPages.SelectedIndex = 0;

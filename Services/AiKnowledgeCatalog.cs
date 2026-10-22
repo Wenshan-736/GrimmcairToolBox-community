@@ -158,7 +158,7 @@ internal sealed class AiKnowledgeCatalog
                 foreach (var entry in Rows(section, "entries"))
                 {
                     var entryId = Text(entry, "id");
-                    var projection = Pick(entry, "id", "title", "summary", "paragraphs", "examples", "formulas", "table", "leadFormula", "versionId", "runtimeTested", "claimIds", "evidenceIds", "sourceKind", "sourceStatus", "sourceName", "author", "sourceMapVersion", "sourceVersionNotice", "playerGuideSource");
+                    var projection = Pick(entry, "id", "title", "summary", "paragraphs", "examples", "formulas", "table", "leadFormula", "versionId", "runtimeTested", "claimIds", "evidenceIds", "sourceKind", "sourceStatus", "sourceName", "author", "authorDisplayName", "sourceMapVersion", "sourceVersionNotice", "documentRole", "documentRoleNotice", "playerGuideSource");
                     var links = new JsonArray();
                     foreach (var effect in Rows(entry, "effects"))
                     {
@@ -252,6 +252,8 @@ internal sealed class AiKnowledgeCatalog
                 {
                     candidate["sourceMapVersion"] = x.Entry.Content["sourceMapVersion"]?.DeepClone();
                     candidate["sourceVersionNotice"] = x.Entry.Content["sourceVersionNotice"]?.DeepClone();
+                    candidate["documentRole"] = x.Entry.Content["documentRole"]?.DeepClone();
+                    candidate["documentRoleNotice"] = x.Entry.Content["documentRoleNotice"]?.DeepClone();
                 }
                 var images = Images.Metadata(x.Entry.Id, 2);
                 if (images.Count > 0) candidate["images"] = images;

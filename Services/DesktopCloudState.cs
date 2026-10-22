@@ -13,6 +13,8 @@ public sealed class DesktopCloudBinding
     // A recreated cloud slot has a new lifecycle; its deleted predecessor is private recovery evidence.
     public string PredecessorSaveId { get; set; } = "";
     public bool Enabled { get; set; }
+    // Persisted explicit opt-out. Recovery may query old receipts but must not replay old uploads/deletes.
+    public bool StopRequestedByIgnore { get; set; }
     public string Status { get; set; } = "disabled";
     public string LastError { get; set; } = "";
     public DateTimeOffset? LastSyncAt { get; set; }
@@ -153,6 +155,23 @@ public sealed class DesktopCloudStateStore
                 File.Move(temporary, path, overwrite: true);
             }
             finally { if (File.Exists(temporary)) File.Delete(temporary); }
+        }
+    }
+
+    public void StopLocalSaveSync(string localSaveId)
+    {
+        lock (gate)
+        {
+            var changed = false;
+            foreach (var binding in State.Accounts.SelectMany(x => x.Bindings).Where(x => x.LocalSaveId == localSaveId))
+            {
+                if (!binding.Enabled && binding.StopRequestedByIgnore) continue;
+                binding.Enabled = false;
+                binding.StopRequestedByIgnore = true;
+                binding.Status = "disabled";
+                changed = true;
+            }
+            if (changed) Save();
         }
     }
 

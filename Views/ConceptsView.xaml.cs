@@ -18,24 +18,6 @@ public partial class ConceptsView : UserControl
     private sealed record GuideSourceLink(string SourceId, string Title, string Author, string? Version, string Introduction, string Url);
     private IReadOnlyList<GuideSourceLink> guideSources = [];
     private IReadOnlyList<GuideSourceLink> visibleGuideSources = [];
-    // Canonical links verified from the already-authorized source index. The beginner sheet
-    // is the user-provided desktop entry point; it does not change the underlying research data.
-    private static readonly IReadOnlyDictionary<string, (string Url, string Introduction)> GuideSourceLinks =
-        new Dictionary<string, (string, string)>(StringComparer.Ordinal)
-        {
-            ["tianting-xiaobudian"] = ("https://docs.qq.com/sheet/DWFZqUmhZdWxES1JC", "面向新人的常用操作、角色与徽章存读档、背包仓库及组队入门。"),
-            ["qqdoc-DYVR2Vm5QaVRMY1V1"] = ("https://docs.qq.com/doc/DYVR2Vm5QaVRMY1V1", "圣光十字军的技能与术语、力锤输出、智锤辅助、阶段装备和文内 Boss 应对举例。"),
-            ["tieba-11020661839"] = ("https://tieba.baidu.com/p/11020661839", "火系魔导师的技能、灼烧伤害、输出配装与 Boss 场景。"),
-            ["qqdoc-DYXZOaFNFcmFzRVZI"] = ("https://docs.qq.com/doc/DYXZOaFNFcmFzRVZI", "各职业的技能属性与定位简介，便于初步了解职业差异。"),
-            ["qqdoc-DSXVqQkxSdUhpb1pB"] = ("https://docs.qq.com/doc/DSXVqQkxSdUhpb1pB", "炼金术士的机制与主要技能、爆发续航、阶段出装和文内 Boss 应对举例；正文另含0.93a说明。"),
-            ["tieba-10816026078"] = ("https://tieba.baidu.com/p/10816026078", "炼金术士在线攻略的帖子入口，包含技能操作与输出补充。"),
-            ["tieba-10662858926"] = ("https://tieba.baidu.com/p/10662858926", "女巫的辅助与输出定位、技能用法、出装和文内 Boss 应对举例。"),
-            ["tieba-10864031821"] = ("https://tieba.baidu.com/p/10864031821", "牧师辅助定位、阶段配装、技能与天使操作，以及文内 Boss 应对举例；部分配图标注0.92b。"),
-            ["tieba-10296394570"] = ("https://tieba.baidu.com/p/10296394570", "炼金版本变化后的技能、输出和装备心得。"),
-            ["tieba-8844086041"] = ("https://tieba.baidu.com/p/8844086041", "火系魔导师的技能与伤害分析，包含旧版伤害样本。"),
-            ["tieba-9092252548"] = ("https://tieba.baidu.com/p/9092252548", "2024年的圣光十字军攻略，作为历史版本参考入口。")
-        };
-
     public ConceptsView() => InitializeComponent();
 
     public string? SelectedSectionId => section?.Id;
@@ -83,17 +65,8 @@ public partial class ConceptsView : UserControl
     public void Load(ConceptCatalog concepts)
     {
         catalog = concepts;
-        guideSources = (concepts.Sections.FirstOrDefault(item => item.Id == "player-guides")?.Entries ?? [])
-            .Where(entry => entry.PlayerGuideSource is { } source && GuideSourceLinks.ContainsKey(source.SourceId))
-            .GroupBy(entry => entry.PlayerGuideSource!.SourceId, StringComparer.Ordinal)
-            .Where(group => group.Key != "tianting-xiaobudian" || group.Any(entry => entry.Id == "player-guide-tianting-beginner"))
-            .Select(group =>
-            {
-                var entry = group.First();
-                var (url, introduction) = GuideSourceLinks[group.Key];
-                return new GuideSourceLink(group.Key, group.Key == "tianting-xiaobudian" ? "天庭小不点 · 萌新指南" : entry.SourceName,
-                    group.Key == "tianting-xiaobudian" ? "天庭小不点" : entry.Author, entry.SourceMapVersion, introduction, url);
-            }).OrderBy(source => source.SourceId == "tianting-xiaobudian" ? 0 : 1).ToArray();
+        guideSources = concepts.GuideSources.Select(source => new GuideSourceLink(source.SourceId,
+            source.Title, source.Author, source.SourceMapVersion, source.Introduction, source.Url)).ToArray();
         DropCalculator.LoadProfiles(concepts.CalculatorProfiles);
         SectionButtons.Children.Clear();
         foreach (var item in concepts.Sections)
@@ -248,17 +221,19 @@ public partial class ConceptsView : UserControl
             stack.Children.Add(linkText);
             GuideSourceCards.Children.Add(Card(stack));
         }
-        if (visibleGuideSources.Count == 0) GuideSourceCards.Children.Add(Paragraph("没有匹配的攻略来源，可换一个作者、职业或版本试试。", muted: true));
+        if (visibleGuideSources.Count == 0) GuideSourceCards.Children.Add(Paragraph(guideSources.Count == 0
+            ? "当前资料包未提供攻略来源清单，请选择包含来源清单的新版资料包。"
+            : "没有匹配的攻略来源，可换一个作者、职业或版本试试。", muted: true));
     }
 
-    private static bool TryGuideSourceUri(string value, out Uri? uri)
+    private bool TryGuideSourceUri(string value, out Uri? uri)
     {
-        uri = null;
-        return value.Length <= 4096 && !value.Any(char.IsControl) && GuideSourceLinks.Values.Any(source => source.Url == value)
-            && Uri.TryCreate(value, UriKind.Absolute, out uri) && uri.Scheme == Uri.UriSchemeHttps && uri.Host.Length > 0 && uri.UserInfo.Length == 0;
+        if (!ConceptGuideSourceCard.TrySourceUri(value, out uri)) return false;
+        var requested = uri;
+        return guideSources.Any(source => ConceptGuideSourceCard.TrySourceUri(source.Url, out var allowed) && allowed == requested);
     }
 
-    private static void OpenGuideSource(object sender, RequestNavigateEventArgs args)
+    private void OpenGuideSource(object sender, RequestNavigateEventArgs args)
     {
         args.Handled = true;
         if (!TryGuideSourceUri(args.Uri.AbsoluteUri, out var uri)) return;

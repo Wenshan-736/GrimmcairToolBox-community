@@ -56,6 +56,21 @@ public static class ResourcePack
     /// <summary>Validate without changing the active process snapshot.</summary>
     public static ResourcePackInfo ValidateExternal(string path) => LoadExternal(Path.GetFullPath(path)).Info;
 
+    // Adopt the same validated bytes once. A rejected saved choice must leave the
+    // process uninitialized so its documented complete-built-in fallback still works.
+    internal static void InitializeSavedExternal(string path, string expectedHash)
+    {
+        lock (Gate)
+        {
+            initializationFailure?.Throw();
+            if (current is not null) throw new InvalidOperationException("资料包已固定。");
+            var candidate = LoadExternal(Path.GetFullPath(path));
+            if (!string.Equals(candidate.Info.PackageSha256, expectedHash, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidDataException("资料包在选择后发生变化。");
+            current = candidate;
+        }
+    }
+
     private static Snapshot LoadEmbedded()
     {
         using var source = typeof(ResourcePack).Assembly.GetManifestResourceStream(ResourceName)

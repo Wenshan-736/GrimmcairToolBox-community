@@ -103,7 +103,7 @@
                                     <Grid><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                                         <TextBlock x:Name="EquipmentTargetHint" Text="请先选择目标所属存档" Foreground="#7B5A3B" FontSize="11" TextTrimming="CharacterEllipsis" ToolTip="目标跟随所选存档；右键装备添加目标，右键目标取消。" />
                                         <ScrollViewer x:Name="EquipmentTargetScroller" Grid.Row="1" MaxHeight="68" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Margin="0,3,0,0">
-                                            <WrapPanel x:Name="EquipmentTargetItems" />
+                                            <WrapPanel x:Name="EquipmentTargetItems" Background="Transparent" MinHeight="42" AllowDrop="True" DragOver="EquipmentTargets_DragOver" Drop="EquipmentTargets_Drop" />
                                         </ScrollViewer>
                                     </Grid>
                                 </Border>
@@ -119,7 +119,7 @@
                             <Grid.ColumnDefinitions><ColumnDefinition Width="0.95*" MinWidth="295" /><ColumnDefinition Width="16" /><ColumnDefinition Width="1.18*" /></Grid.ColumnDefinitions>
                             <Border Style="{StaticResource PaperPanel}" Padding="11,16,7,10">
                                 <Grid><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-                                    <DockPanel Margin="12,0,7,12"><TextBlock Text="阶段由高到低" DockPanel.Dock="Right" FontSize="10" Foreground="#92714D" VerticalAlignment="Center" /><TextBlock Text="冒险物资目录" Style="{StaticResource SectionLabel}" Margin="0" /></DockPanel>
+                                    <DockPanel Margin="12,0,7,12"><ComboBox x:Name="EquipmentStageBox" DockPanel.Dock="Right" Width="134" MinHeight="30" Padding="7,4" SelectionChanged="EquipmentStageBox_SelectionChanged" AutomationProperties.Name="物品阶段筛选" ToolTip="按资料中的阶段筛选，可与类别和搜索组合" /><TextBlock Text="冒险物资目录" Style="{StaticResource SectionLabel}" Margin="0" VerticalAlignment="Center" /></DockPanel>
                                     <ListBox x:Name="EquipmentList" Grid.Row="1" SelectionChanged="EquipmentList_SelectionChanged" AutomationProperties.Name="装备目录" PreviewMouseRightButtonDown="EquipmentList_PreviewMouseRightButtonDown" ContextMenuOpening="EquipmentList_ContextMenuOpening">
                                         <ListBox.ItemTemplate><DataTemplate>
                                             <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="48" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
@@ -194,8 +194,8 @@
                 <TabItem Header="我的存档">
                     <Grid>
                         <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                        <Border Style="{StaticResource PaperPanel}" Padding="18,15" Margin="0,0,0,12">
-                            <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="0.9*" /><ColumnDefinition Width="24" /><ColumnDefinition Width="1.2*" /><ColumnDefinition Width="20" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                        <Border x:Name="SaveHeader" Style="{StaticResource PaperPanel}" Padding="18,15" Margin="0,0,0,12">
+                            <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="0.9*" /><ColumnDefinition Width="24" /><ColumnDefinition Width="1.2*" /><ColumnDefinition Width="20" /><ColumnDefinition Width="1.35*" MaxWidth="310" /></Grid.ColumnDefinitions>
                                 <StackPanel>
                                     <DockPanel Margin="0,0,0,5">
                                         <ToggleButton x:Name="SaveFavoriteButton" DockPanel.Dock="Right" Click="SaveFavorite_Click"
@@ -233,11 +233,17 @@
                                     </ComboBox>
                                 </StackPanel>
                                 <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                                    <TextBlock x:Name="SaveTitle" Text="你的冒险档案" FontSize="23" FontWeight="SemiBold" TextWrapping="Wrap" />
-                                    <TextBlock x:Name="SaveSummary" Text="选择存档，查看角色物品与藏品。" Style="{StaticResource MutedText}" Margin="0,7,0,0" />
+                                    <TextBlock x:Name="SaveTitle" Text="你的冒险档案" FontSize="23" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
+                                    <TextBlock x:Name="SaveSummary" Text="选择存档，查看角色物品与藏品。" Style="{StaticResource MutedText}" Margin="0,7,0,0" MaxHeight="40" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
                                 </StackPanel>
-                                <StackPanel Grid.Column="4" HorizontalAlignment="Right" VerticalAlignment="Top">
-                                    <Button x:Name="ImportSaveButton" Content="导入存档" Click="ImportSave_Click" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Right" Margin="0,0,0,14" />
+                                <StackPanel Grid.Column="4" VerticalAlignment="Top">
+                                    <Viewbox x:Name="SaveHeaderActionsViewport" Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Right" Margin="0,0,0,14">
+                                        <StackPanel x:Name="SaveHeaderActions" Orientation="Horizontal">
+                                            <Button x:Name="IgnoreSaveButton" Content="忽略此存档" Click="IgnoreSave_Click" Width="98" Height="37" Padding="8,7" Margin="0,0,8,0" ToolTip="隐藏并停止本地更新和云同步；保留原文件与云端内容" />
+                                            <Button x:Name="ManageIgnoredSavesButton" Content="已忽略存档" Click="ManageIgnoredSaves_Click" Width="98" Height="37" Padding="8,7" Margin="0,0,8,0" />
+                                            <Button x:Name="ImportSaveButton" Content="导入存档" Click="ImportSave_Click" Style="{StaticResource PrimaryButton}" Width="98" Height="37" Padding="8,7" />
+                                        </StackPanel>
+                                    </Viewbox>
                                     <ToggleButton x:Name="SaveSyncBox" Content="云同步" Click="SaveSync_Click" HorizontalAlignment="Right" AutomationProperties.Name="开启云同步">
                                         <ToggleButton.Style>
                                             <Style TargetType="ToggleButton">

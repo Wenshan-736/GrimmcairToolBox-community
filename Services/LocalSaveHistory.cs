@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Grimmcair.Desktop.Services;
 
@@ -198,16 +199,19 @@ public sealed class LocalSaveHistory
         try
         {
             RequireNoLink(file);
-            var value = JsonSerializer.Deserialize<LocalSaveHistorySnapshot>(File.ReadAllText(file), Options)
+            using var document = JsonDocument.Parse(File.ReadAllText(file));
+            var value = document.RootElement.Deserialize<LocalSaveHistorySnapshot>(Options)
                 ?? throw new InvalidDataException();
-            if (value.Entry is null || value.Save is null) throw new InvalidDataException();
+            if (value.Entry is null || value.Save is null
+                || !document.RootElement.TryGetProperty("save", out var storedSave)
+                || storedSave.ValueKind != JsonValueKind.Object) throw new InvalidDataException();
             ValidateSave(value.Save);
             ValidateId(value.Entry.Id);
             if (value.SchemaVersion != 1 || value.Marker != "Grimmcair.LocalSaveHistory" || value.OwnerId != ownerId
                 || value.LocalSaveId != localSaveId || value.Save.OwnerId != ownerId || value.Save.Id != localSaveId
                 || value.Entry.Id != Path.GetFileNameWithoutExtension(file) || value.Save.LocalHistoryId != value.Entry.Id
                 || value.Entry.CreatedAtUtc == default || value.ContentFingerprint != Fingerprint(value.Save)
-                || value.SnapshotSha256 != Hash(JsonSerializer.Serialize(value.Save, Options))
+                || value.SnapshotSha256 != StoredSnapshotHash(value.Save, storedSave)
                 || value.Entry.SaveName != value.Save.Name || value.Entry.IsMain != value.Save.IsMain
                 || value.Entry.TargetCount != value.Save.Targets.Count || value.Entry.LevelText != Level(value.Save)
                 || value.Entry.InventoryItemCount != value.Save.Inventory.Count(x => x.Quantity > 0)
@@ -219,6 +223,26 @@ public sealed class LocalSaveHistory
         }
         catch (Exception error) when (error is IOException or InvalidDataException or UnauthorizedAccessException or JsonException or InvalidOperationException)
         { throw new InvalidOperationException("本地历史无法读取或校验，未应用这份历史。", error); }
+    }
+
+    private static string StoredSnapshotHash(CloudSave save, JsonElement storedSave)
+    {
+        // Older snapshots omit members introduced in a later app version. Keep the
+        // original typed writers (notably DateTimeOffset), but hash only stored members.
+        // Serializing JsonElement directly would escape a date's '+' differently.
+        var members = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var property in storedSave.EnumerateObject())
+            if (!members.Add(property.Name)) throw new InvalidDataException();
+        var resolver = new DefaultJsonTypeInfoResolver();
+        resolver.Modifiers.Add(info =>
+        {
+            if (info.Type != typeof(CloudSave)) return;
+            var supported = info.Properties.Select(property => property.Name).ToHashSet(StringComparer.Ordinal);
+            if (members.Any(name => !supported.Contains(name))) throw new InvalidDataException();
+            for (var i = info.Properties.Count - 1; i >= 0; i--)
+                if (!members.Contains(info.Properties[i].Name)) info.Properties.RemoveAt(i);
+        });
+        return Hash(JsonSerializer.Serialize(save, new JsonSerializerOptions(Options) { TypeInfoResolver = resolver }));
     }
 
     private string Branch(string ownerId, string localSaveId)

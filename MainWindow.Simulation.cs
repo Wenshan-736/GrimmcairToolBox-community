@@ -29,7 +29,11 @@ public partial class MainWindow
             if (File.Exists(AccountDocumentsPath))
                 foreach (var doc in JsonSerializer.Deserialize<List<SavedDocument>>(File.ReadAllText(AccountDocumentsPath)) ?? [])
                     if (doc.Result["kind"]?.ToString() == "account") _saves.Add(doc);
-            _simulation.Changed += (_, _) => RefreshSimulationContext();
+            _simulation.Changed += (_, _) =>
+            {
+                if (Dispatcher.CheckAccess()) RefreshSimulationContext();
+                else Dispatcher.BeginInvoke(() => { if (!_closed) RefreshSimulationContext(); });
+            };
             RefreshSimulationContext();
             if (SaveList.SelectedItem is SavedDocument selected) ShowSelectedSave(selected);
             DesktopDiagnostics.Mark(DesktopDiagnosticStage.LocalStateLoaded);
@@ -58,7 +62,9 @@ public partial class MainWindow
         try
         {
             if (syncPending) SyncPendingSaves();
-            foreach (var save in _simulation.State.Saves.Where(s => s.OwnerId == CloudSimulation.PreviewOwnerId))
+            foreach (var ignored in _saves.Where(d => d.SimulationSaveId is not null
+                         && _simulation.FindSave(CloudSimulation.PreviewOwnerId, d.SimulationSaveId)?.IsIgnored == true).ToList()) _saves.Remove(ignored);
+            foreach (var save in _simulation.State.Saves.Where(s => s.OwnerId == CloudSimulation.PreviewOwnerId && !s.IsIgnored))
             {
                 var doc = _saves.FirstOrDefault(d => d.SimulationSaveId == save.Id);
                 if (doc is null)
@@ -90,6 +96,7 @@ public partial class MainWindow
         finally { _refreshingSimulation = false; _refreshingSavePicker = false; }
         RefreshSelectedTargets();
         RefreshImportedSaveControls();
+        RefreshMaterialAnalysisWindows();
     }
 
     private void RefreshSavePicker()
@@ -196,7 +203,7 @@ public partial class MainWindow
 
     private void RefreshTargetChoices()
     {
-        var choices = _simulation!.State.Saves.Where(s => s.OwnerId == CloudSimulation.PreviewOwnerId)
+        var choices = _simulation!.State.Saves.Where(s => s.OwnerId == CloudSimulation.PreviewOwnerId && !s.IsIgnored)
             .Select(s => new TargetSaveChoice(s.Id, s.OwnerId, $"{s.GameAccount} · {s.Profession} · {s.Name}（{(s.IsMain ? "主档" : "副档")}）")).ToList();
         var current = SaveList.SelectedItem is SavedDocument doc ? FindLinkedSave(doc) : null;
         TargetSaveBox.ItemsSource = choices;
@@ -267,7 +274,7 @@ public partial class MainWindow
         }
         SaveSyncBox.IsEnabled = linked is not null; SaveSyncBox.IsChecked = linked?.SyncEnabled == true;
         MainSaveBox.IsChecked = linked?.IsMain == true;
-        MainSaveBox.IsEnabled = linked?.SyncEnabled == true && linked.IsMain == false;
+        MainSaveBox.IsEnabled = linked is { IsIgnored: false, IsMain: false };
         MainSaveBox.ToolTip = "云同步开启后可设为主档，上报该档目标装备和爵及以上材料需求，供队长查看分配。每份存档独立保留目标，切换主档不会转交或清空目标。";
         SaveSyncBox.ToolTip = doc is null ? "请选择或导入一份存档" : linked is not null
             ? $"{_simulation!.GetSyncStatus(linked.OwnerId, linked.Id)}（本地模拟）\n开启后，本地内容更新会自动更新云端存档。云图标只表示已开启。"
@@ -290,6 +297,13 @@ public partial class MainWindow
 
     private void MainSave_Click(object sender, RoutedEventArgs e)
     {
+        if (SaveList.SelectedItem is SavedDocument localDoc && FindLinkedSave(localDoc) is { IsIgnored: false } local
+            && !local.IsMain && (!DesktopOnlineMode || !RemoteSyncEnabled(local.Id)))
+        {
+            RunSimulationAction(() => { _simulation!.SetMain(local.OwnerId, local.Id); FollowSelectedSaveTarget(); });
+            StatusText.Text = "已设为本地主档；云同步保持关闭。";
+            return;
+        }
         if (DesktopOnlineMode)
         {
             var publish = MainSaveBox.IsChecked == true;

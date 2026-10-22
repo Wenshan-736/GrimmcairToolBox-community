@@ -33,6 +33,7 @@ public partial class MainWindow
             { StatusText.Text = "旧数据正在复制和校验，请等待完成后再关闭窗口。"; return; }
             if (_closing) return;
             _closing = true;
+            DesktopDiagnostics.Mark(DesktopDiagnosticStage.ShutdownRequested);
             try { await StopAiChatAsync(); }
             catch (IOException error)
             {
@@ -70,16 +71,26 @@ public partial class MainWindow
 
     private async Task InitializeArchivesAsync()
     {
-        if (_decoder is null || _simulation is null) return;
+        if (_closed || _closing || _decoder is null || _simulation is null) return;
         var stateDirectory = Path.GetDirectoryName(_simulationPath)!;
         // The decoder owns a lazily populated object cache; archive reads have their own instance.
         var archiveDecoder = new SaveDecoder();
         _archives = new SaveArchiveService(Path.Combine(stateDirectory, "archive-manifest.json"),
             (bytes, name) => archiveDecoder.ParseBytesForImport(bytes, name));
+        _archives.ShouldIgnoreSource = (path, account, parsed) => _simulation?.IsIgnoredSource(path, account, parsed) == true;
+        _archives.SeedVerifiedSnapshots(_simulation.State.Saves);
+        _archives.SourceRenamed += (_, e) =>
+        {
+            try { _simulation?.TrackIgnoredSourceRename(e.OldFullPath, e.FullPath); }
+            catch (Exception error) when (error is IOException or InvalidOperationException)
+            { DesktopDiagnostics.ReportException(DesktopDiagnosticStage.LocalStateLoading, error); }
+        };
         _archiveNotifications = new ArchiveNotificationService(Dispatcher);
         try
         {
             _replays = new ReplayArchiveCoordinator(Path.Combine(stateDirectory, "replay-pending.json"), _archives.ArchiveMedia);
+            _replays.RemovePendingSources(_simulation.State.Saves.Where(s => s.IsIgnored)
+                .SelectMany(s => s.IgnoredSourceKeys.Append(s.SourceKey)).ToHashSet(StringComparer.Ordinal));
             _screenshotHotkey = new DesktopScreenshotHotkey(this, CaptureCurrentSaveScreenshot);
             InitializeGameHotkeys();
             SettingsPage.SettingsSaved += async (_, e) => await ConfigureArchivesAsync(e.NewSettings);
@@ -116,7 +127,7 @@ public partial class MainWindow
                         try
                         {
                             foreach (var entry in result.Changes.Where(e => e.Parsed["kind"]?.ToString() == "character"))
-                                _replays?.Queue(entry);
+                                if (_simulation?.IsIgnoredSource(entry.SourcePath, entry.GameAccount, entry.Parsed) != true) _replays?.Queue(entry);
                         }
                         catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException)
                         { result.Issues.Add("录像关联未能记录：" + error.Message); }
@@ -148,9 +159,21 @@ public partial class MainWindow
         var issues = result.Issues.ToList();
         foreach (var entry in result.Entries)
         {
+            if (_simulation?.IsIgnoredSource(entry.SourcePath, entry.GameAccount, entry.Parsed) == true) continue;
             try
             {
                 _importSourcePaths.Add(Path.GetFullPath(entry.SourcePath));
+                var accepted = _simulation?.State.Saves.FirstOrDefault(s => s.OwnerId == CloudSimulation.PreviewOwnerId
+                    && !s.IsIgnored && !s.SourceDetached && s.SourceKey == entry.LogicalSourceKey
+                    && s.AcceptedSourceHash == entry.SourceHash && s.ParsedResult is not null);
+                if (accepted is not null)
+                {
+                    // The library already holds this accepted source (possibly with a later local/cloud restore).
+                    // Avoid N whole-state JSON transactions on every startup/flush for unchanged files.
+                    var cachedDocument = _saves.FirstOrDefault(s => s.SimulationSaveId == accepted.Id);
+                    if (cachedDocument is not null) cachedDocument.ChangeSummary = entry.ChangeSummary;
+                    continue;
+                }
                 var doc = AcceptParsedSave(entry.Parsed, string.IsNullOrEmpty(entry.ArchivePath) ? entry.SourcePath : entry.ArchivePath,
                     sourceKey: entry.LogicalSourceKey, saveName: entry.SaveName, changeSummary: entry.ChangeSummary);
                 // Only live file changes join the game awaiting its future completed replay.

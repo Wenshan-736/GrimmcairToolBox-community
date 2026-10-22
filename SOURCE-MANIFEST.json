@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "applicationVersion": "0.1.8",
+  "applicationVersion": "0.1.9",
   "edition": "Community",
   "licenseConfirmed": true,
   "containsDependencies": false,
   "files": [
     {
       "path": ".gitignore",
-      "bytes": 360,
-      "sha256": "faa48ac7b545ffc0ccd0c2ef007d66afee102bb277b99d1066021fe78f298eb4"
+      "bytes": 376,
+      "sha256": "dd6c31bcc4a134638aaa7b4c99bc8794670bb4e6267da6ce37f80a16c741cce0"
     },
     {
       "path": "App.xaml",
@@ -47,8 +47,8 @@
     },
     {
       "path": "Grimmcair.Desktop.csproj",
-      "bytes": 4824,
-      "sha256": "d664974dd20e166e2f72f1edd7f10db0ebb5892d865886da07bfcefdec312b88"
+      "bytes": 4862,
+      "sha256": "afab6e6b6858526b0c5d4103b565853f499c4d3ec15d079953f331e6182b8c0a"
     },
     {
       "path": "LICENSE",
@@ -62,23 +62,23 @@
     },
     {
       "path": "MainWindow.Archives.cs",
-      "bytes": 11381,
-      "sha256": "75e13ef6b95373ea2b10e4c2cc97c56ed2f22f948730f68c00aec5f64aa5557b"
+      "bytes": 13280,
+      "sha256": "bff67d3570a6a153f9ce198ef70e9abf4e628a94304453f025cc0e0fed8fbf97"
     },
     {
       "path": "MainWindow.DesktopApi.cs",
-      "bytes": 26127,
-      "sha256": "a04a4b3367cde46e2959213aa86029a2c8191a82ce63a687a3d33648190ff980"
+      "bytes": 26499,
+      "sha256": "1251950a8c7637c51d0a7bbe82b8bdd7769c3750065b12deaa7143daca275cb5"
     },
     {
       "path": "MainWindow.DesktopCloudActions.cs",
-      "bytes": 27576,
-      "sha256": "d971629efcd7f2202b057efc6c5528410421b363640759a1da6614c089b75038"
+      "bytes": 31285,
+      "sha256": "0b4077173c0413f533072f13900e148c5bd30b37aafabd742788015d99e20ac5"
     },
     {
       "path": "MainWindow.DesktopCloudLink.cs",
-      "bytes": 11950,
-      "sha256": "2e603941d7f47bdee48e09c10e3fa59f82f0e427ee57904e6a9487d0360f442a"
+      "bytes": 12080,
+      "sha256": "7332a9a551a6d480c000c23ca4b4bf2b1b16152020059a16d6afb373e6a215f6"
     },
     {
       "path": "MainWindow.DesktopDownloads.cs",
@@ -87,13 +87,13 @@
     },
     {
       "path": "MainWindow.EquipmentGuide.cs",
-      "bytes": 2588,
-      "sha256": "abbdb0836c2472fbfb93c0fa2edda1f0a6c04cdb5454cc82c274ca62ebfefcf6"
+      "bytes": 2632,
+      "sha256": "9c405c6e92b3b6b918f47c9b4721708a38780228794d99396f4b87f3c01dc570"
     },
     {
       "path": "MainWindow.EquipmentTargets.cs",
-      "bytes": 5520,
-      "sha256": "6d69146710374d8e2ae7ebd5396c8a2144c8b65b62d417fdf137dba270fa95cd"
+      "bytes": 7513,
+      "sha256": "0b346f849bba8fc3fb0df7c9d2b93507b260728c570753fe5a837d4f12405da6"
     },
     {
       "path": "MainWindow.Favorites.cs",
@@ -107,18 +107,18 @@
     },
     {
       "path": "MainWindow.Guides.cs",
-      "bytes": 1018,
-      "sha256": "c9db72111321681e05a78fab73dd024b539e2054f1c2cfdaa2d9c21ce220680c"
+      "bytes": 1098,
+      "sha256": "3a5daa68e75a8caae7aa4ca02240144af5899862b747368ac04ec2a24932b5d7"
     },
     {
       "path": "MainWindow.Materials.cs",
-      "bytes": 1461,
-      "sha256": "4eb25511fb573294356c07c2bc4b648204e20fa93546d15afb4d95e555e1552a"
+      "bytes": 4542,
+      "sha256": "a74e75154fffe83681fccc8a0e514b12266321f71d727dbdb2787be04a429105"
     },
     {
       "path": "MainWindow.Recipes.cs",
-      "bytes": 11012,
-      "sha256": "11a3e37e5985416b43a70d660d6129c04409cc0222ef638f45b16fbd0f55da2c"
+      "bytes": 11057,
+      "sha256": "6112bf9d8e0fc11814608cfa7139a80c89efc3ae05182eb673b3683d24b21d38"
     },
     {
       "path": "MainWindow.SaveHistory.cs",
@@ -126,19 +126,24 @@
       "sha256": "786a6d0963d451f813e345a4b7a2ee8c1a672e98a03498db3cf6d2215a3e3970"
     },
     {
+      "path": "MainWindow.SaveIgnore.cs",
+      "bytes": 7471,
+      "sha256": "d50cba5bba290018dfb2be1eb6c8203edf3bbd942b1458f2a3879750ebc8a8c3"
+    },
+    {
       "path": "MainWindow.Simulation.cs",
-      "bytes": 23581,
-      "sha256": "7108d1410b3aa675df19744a093af2a17a8f576625376649c933d116827c1d34"
+      "bytes": 24505,
+      "sha256": "ef75839968c8204c029f51a96df28c6b20a5a0d5507fda16b259cae87411fb0c"
     },
     {
       "path": "MainWindow.xaml",
-      "bytes": 44895,
-      "sha256": "f642f88d492d21210553c81de53d2554acfaed56cd0adbc8dfe5659ee143ca47"
+      "bytes": 46237,
+      "sha256": "cb86447aa5d185927efa3ab134529fc3e381e9abdef676f61155b5d4f935b989"
     },
     {
       "path": "MainWindow.xaml.cs",
-      "bytes": 21293,
-      "sha256": "6c245c78e932daf74c3fb1978740f83888e376919a6d697a726184d9d8896c41"
+      "bytes": 23049,
+      "sha256": "c69072fe64a3b567aa349aba465d34d6299821f1f408c5203cf8afd06b420448"
     },
     {
       "path": "McpProgram.cs",
@@ -157,8 +162,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 4241,
-      "sha256": "e2671c93da4a5d79dd15e09bc4e2eb7196dec1d0480ccefd876223bd70307c10"
+      "bytes": 4637,
+      "sha256": "8b03293a7ee18886bc6e99d83b810d82be684e31360687b3d779d330a3de6e6c"
     },
     {
       "path": "Services/AiChatClient.cs",
@@ -182,8 +187,8 @@
     },
     {
       "path": "Services/AiKnowledgeCatalog.cs",
-      "bytes": 38625,
-      "sha256": "dce58ccadbddef300f8214137080dce71af3313b8dc5b14359b1f1f2b947b2d9"
+      "bytes": 38884,
+      "sha256": "2feb18febe8ffa64b2ff0a10eb43113e83454ad13bf19d65a04af0146259181a"
     },
     {
       "path": "Services/AiKnowledgeJson.cs",
@@ -193,17 +198,17 @@
     {
       "path": "Services/AiKnowledgeMcp.cs",
       "bytes": 20730,
-      "sha256": "7166438c72ee463442c0d18e39d519939f3c65bc5411ce8185a66c43c1665efa"
+      "sha256": "ff6236aa8d9cc5a1af3c973957795730a9128bae547a547a30d854deb0bfcb82"
     },
     {
       "path": "Services/AiKnowledgeReader.cs",
-      "bytes": 19742,
-      "sha256": "18a4218ed2e67832c0956e501ac926a74900009cde29f1ed298d90f3678d2ef8"
+      "bytes": 19902,
+      "sha256": "2e95536f41ac57be67488a6ee0bd6c75692a00ccad50b41050e40b7125eef522"
     },
     {
       "path": "Services/AiKnowledgeSkill.cs",
-      "bytes": 17775,
-      "sha256": "f081e2bd0577490c5d3f8046eb53ce0ef0f0d1ea7eb48bd61be4134a7267ad34"
+      "bytes": 18046,
+      "sha256": "a1610aec351b92409025e4762b83f7a73a96268a6b15d6adbadb526da84735bc"
     },
     {
       "path": "Services/AiToolDefinition.cs",
@@ -222,18 +227,18 @@
     },
     {
       "path": "Services/CloudSimulation.cs",
-      "bytes": 47717,
-      "sha256": "8b00f2b884101a51cb891728c24a21661f071c5921f8c245594e902dacff2598"
+      "bytes": 53406,
+      "sha256": "9fb77c9ccd13c2db3be8247c2fab34e7692a5a18c9f3eaec093c23045c28bd76"
     },
     {
       "path": "Services/CloudSimulationModels.cs",
-      "bytes": 5016,
-      "sha256": "24195b409fa53cfb9bbd5ceb6fe6a0d414734f5ddbbd328b3b0d12923df2292a"
+      "bytes": 5215,
+      "sha256": "a2a7c97c7f1faa1adb060a0a8a436f863033f66d360c8b7d57af6dda20a3e4b8"
     },
     {
       "path": "Services/ConceptCatalog.cs",
-      "bytes": 12047,
-      "sha256": "8786276fd3cc76f20850a8c38cf4061ddb7e5e59fe2a5449d208e6e3aaf215b3"
+      "bytes": 14234,
+      "sha256": "2b995f4ad17acc458f92f6e5bcf3f29af57a59548d803e8e7b59688f49efc15f"
     },
     {
       "path": "Services/ConceptEffectRendering.cs",
@@ -272,13 +277,13 @@
     },
     {
       "path": "Services/DesktopCloudState.cs",
-      "bytes": 8684,
-      "sha256": "dd2e8e0a57f6811bca6ea009960f8792b51002413f7eed3e2958a70f1bdedbaa"
+      "bytes": 9419,
+      "sha256": "efa4d1c922437cbebd7b6f91af68396e70f2c3c6a97f71fd868ffb2fd3993389"
     },
     {
       "path": "Services/DesktopCloudSync.cs",
-      "bytes": 93296,
-      "sha256": "b5132b2d30a8372d534212263e3bff1532b5ab092496de802449f7910f988c76"
+      "bytes": 95806,
+      "sha256": "ed1e0130a507352d3add6c1350d6dbbe8d8601c74a60d85c3d7ffa4a8f83b44f"
     },
     {
       "path": "Services/DesktopConnectionSettings.cs",
@@ -297,8 +302,8 @@
     },
     {
       "path": "Services/DesktopDataPaths.cs",
-      "bytes": 8850,
-      "sha256": "3ccdba90c5e37cb7543dbee8e48f0ae1cfdea9cba1cfcf54f731652d52ea300e"
+      "bytes": 7770,
+      "sha256": "424a0df498fac6922d7c53382d70c80cfddb99124404d005b05a1a0c39ab576e"
     },
     {
       "path": "Services/DesktopDiagnostics.cs",
@@ -352,13 +357,13 @@
     },
     {
       "path": "Services/KnowledgePackSelection.cs",
-      "bytes": 5000,
-      "sha256": "004b7730b7320d5d8f9be9add5c0297d5e4473efbad8e6f6c6710685f63e9f4f"
+      "bytes": 4842,
+      "sha256": "610772f2ff2e0bfb69bcb66cbcf14d6e321df2a74365c6669aace14bc971407b"
     },
     {
       "path": "Services/LocalSaveHistory.cs",
-      "bytes": 22498,
-      "sha256": "8dfc847cac087731e072582650084aa80e6e2e29abfa92abf2a00bdb6310a141"
+      "bytes": 23972,
+      "sha256": "751df674e182ce00d4c63e1f7852b03415d4e6113d7fec0a139f75a1c4bdc334"
     },
     {
       "path": "Services/LocalSettings.cs",
@@ -387,8 +392,8 @@
     },
     {
       "path": "Services/ReplayArchiveCoordinator.cs",
-      "bytes": 17006,
-      "sha256": "1c21fb811656b420c7731b956d324430b8566f4283370257945686d6c6584425"
+      "bytes": 17440,
+      "sha256": "ef5727fb636a0e4b2ab383ac828c1f9004bd1a2853d10dd64f4fbfe03cf9f3c1"
     },
     {
       "path": "Services/ResourceImage.cs",
@@ -397,13 +402,13 @@
     },
     {
       "path": "Services/ResourcePack.cs",
-      "bytes": 17712,
-      "sha256": "e2935e1a6316e690ad07868586c493a057d3d9299c2b1c26f1f730696ac64bc9"
+      "bytes": 18460,
+      "sha256": "0f45a41faa5d1f79daf489d0f7d385d58d3081b6553d3ae86758f33ec7479914"
     },
     {
       "path": "Services/SaveArchiveService.cs",
-      "bytes": 24130,
-      "sha256": "efa6a88bfa9d541f288466355d7945bf81a622995318928a3d71bfc0e11acb3a"
+      "bytes": 26617,
+      "sha256": "8bb368dcfa92534d522ed867d2f844cb3c436f49498794db70d3537834f242fb"
     },
     {
       "path": "Services/SaveDecoder.cs",
@@ -438,7 +443,7 @@
     {
       "path": "Views/AboutWindow.xaml.cs",
       "bytes": 1081,
-      "sha256": "d287e934c1dda88a7b9561c32c8fd6fbcf6f21ab0996aff95816b3269444ba07"
+      "sha256": "5c15ac7786393a0cf037bbe3b3375c1d9a1528c28345024b161573b0f974e8bd"
     },
     {
       "path": "Views/AiChatView.xaml",
@@ -517,8 +522,8 @@
     },
     {
       "path": "Views/ConceptsView.xaml.cs",
-      "bytes": 33513,
-      "sha256": "ce84b29da3bbf82d9d2580d39d987aa7ab07c0e570fd126d5d52a05473209fdc"
+      "bytes": 30543,
+      "sha256": "d30c5e3faa4f241102436037f20f4c2e6ebf0243cc56c246e1c7b81ea9f38730"
     },
     {
       "path": "Views/DesktopCloudLinkWindow.xaml",
@@ -606,14 +611,24 @@
       "sha256": "3caab31c8df44e2d76d9534c1521900e285784e1b69cab0c237620cada063fa9"
     },
     {
+      "path": "Views/MaterialAnalysisWindow.Diagram.cs",
+      "bytes": 3770,
+      "sha256": "6576fdc33d665d47463097a7ec67c3def78d37dde801200030a4d941413b26a3"
+    },
+    {
       "path": "Views/MaterialAnalysisWindow.xaml",
-      "bytes": 9994,
-      "sha256": "5d3534925d66f316d13b1483acc0d69818451c55f9c8a7d40021f4691917dcba"
+      "bytes": 12525,
+      "sha256": "ebc48277078dfc49d587db8c7471eabdc58c98f65f5e9b7170c1d04a5c84e7b0"
     },
     {
       "path": "Views/MaterialAnalysisWindow.xaml.cs",
-      "bytes": 30069,
-      "sha256": "dbcfac245c62e460784b145c19e3167ae48d6dd90efa4fd408eda66628c24ba0"
+      "bytes": 32247,
+      "sha256": "d8fe4652e3a8956c0e3fbacb5e2d1ee28a34fa429176147ac8507269f4f453ba"
+    },
+    {
+      "path": "Views/MaterialRouteDiagram.cs",
+      "bytes": 11796,
+      "sha256": "97e8f8cbc5ac7a4c88bc6ebead6fc2c33951bf3ed109b5b1365f77bc2001d21f"
     },
     {
       "path": "Views/SaveRenameWindow.xaml",
@@ -657,8 +672,8 @@
     },
     {
       "path": "scripts/copy-installed-dependencies.ps1",
-      "bytes": 2537,
-      "sha256": "4520c8e46c1abb6dc984f2e716c67d60f469ea14d38075173ba367a7a29f9f77"
+      "bytes": 3837,
+      "sha256": "1f5a79d71c9f3da37060f8f8ba8d5699809eaebb0af38a677c947d2ab19e34a6"
     },
     {
       "path": "scripts/start-with-diagnostics.cmd",

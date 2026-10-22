@@ -56,9 +56,7 @@ public static class KnowledgePackSelection
                 var saved = JsonSerializer.Deserialize<Selection>(File.ReadAllText(SettingsPath));
                 if (saved is null || saved.SchemaVersion != 1 || !Path.IsPathFullyQualified(saved.PackagePath))
                     throw new InvalidDataException();
-                var metadata = ResourcePack.ValidateExternal(saved.PackagePath);
-                if (!string.Equals(metadata.PackageSha256, saved.PackageSha256, StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidDataException();
+                ResourcePack.InitializeSavedExternal(saved.PackagePath, saved.PackageSha256);
                 package = saved.PackagePath;
                 expectedHash = saved.PackageSha256;
             }

@@ -8,13 +8,13 @@ public partial class MainWindow
     private GuideCatalog _guide = new();
     private Dictionary<string, string> _badgeBonuses = [];
 
-    private void InitializeGuides()
+    private void InitializeGuides(GuideCatalog? guide = null, ConceptCatalog? concepts = null)
     {
-        _guide = GuideCatalog.Load();
+        _guide = guide ?? GuideCatalog.Load();
         _badgeBonuses = _guide.BadgeBonuses.ToDictionary(b => b.ItemId, b => b.Text, StringComparer.Ordinal);
         HeroGuide.Load(_guide);
         BossGuide.Load(_guide);
-        ConceptGuide.Load(ConceptCatalog.Load());
+        ConceptGuide.Load(concepts ?? ConceptCatalog.Load());
         BossGuide.ItemRequested += OpenRelatedItem;
         BossGuide.DropRulesRequested += () =>
         {

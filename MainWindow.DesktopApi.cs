@@ -308,6 +308,8 @@ public partial class MainWindow
                 _desktopStateStore!, _desktopClient!.BaseUrl, _desktopSession.UserId!.Value);
             _desktopReference = reference;
         }
+        foreach (var ignored in _simulation?.State.Saves.Where(x => x.IsIgnored) ?? [])
+            _desktopSync!.StopForIgnoredSave(ignored.Id);
         var saves = await SendDesktopAsync("GET", "/api/desktop/cloud-saves", null, token);
         var characters = await SendDesktopAsync("GET", "/api/desktop/characters", null, token);
         _remoteSaves = ReadObjectList(saves, "items");
@@ -365,9 +367,12 @@ public partial class MainWindow
         SaveSyncBox.IsEnabled = save is { IsDemo: false } && _desktopSync is not null && !_desktopBusy && DesktopFeaturesAllowed;
         var cloudMain = save is null ? null : RemoteSave(save.Id);
         var roleHasAnotherMain = save is not null && cloudMain is null && RemoteCharacter(save)?["mainSaveId"] is not null;
-        MainSaveBox.IsChecked = cloudMain is null ? !roleHasAnotherMain && save?.IsMain == true : cloudMain["isMain"]?.GetValue<bool>() == true;
-        MainSaveBox.IsEnabled = save is { IsDemo: false } && binding?.Enabled == true && !_desktopBusy && DesktopFeaturesAllowed;
-        MainSaveBox.ToolTip = cloudMain is not null && save?.IsMain == true && cloudMain["isMain"]?.GetValue<bool>() != true
+        MainSaveBox.IsChecked = binding?.Enabled != true ? save?.IsMain == true
+            : cloudMain is null ? !roleHasAnotherMain && save?.IsMain == true : cloudMain["isMain"]?.GetValue<bool>() == true;
+        MainSaveBox.IsEnabled = save is { IsDemo: false, IsIgnored: false } && !_desktopBusy && DesktopFeaturesAllowed
+            && (binding?.Enabled == true || !save.IsMain);
+        MainSaveBox.ToolTip = binding?.Enabled != true ? "设为本地主档；不会自动开启云同步或更改云端主档。"
+            : cloudMain is not null && save?.IsMain == true && cloudMain["isMain"]?.GetValue<bool>() != true
             ? "当前为本地主档、云端副档。打开开关会显式转为云主档，并上报目标和爵及以上材料需求。"
             : "设为主档会上报目标装备和爵及以上材料需求，供队长查看分配。关闭则撤回公开需求，继续保存云档；目标保留在本机。第一份存档默认打开，同角色只能有一个云主档。";
         LinkCloudButton.Visibility = Visibility.Visible;

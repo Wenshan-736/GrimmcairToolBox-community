@@ -130,13 +130,16 @@ public sealed class CloudSimulation
     {
         ValidateImport(import);
         GetAccount(State, ownerId);
+        if (IsIgnoredImport(ownerId, import))
+            throw new InvalidOperationException("这份存档已忽略，请先在“已忽略的存档”中恢复，再导入或接收更新。");
         var importedName = ImportedName(import);
         var existing = State.Saves.FirstOrDefault(x => !x.IsDemo
             && SameRole(x, ownerId, import.GameAccount, import.Profession)
             && string.Equals(x.Name.Trim(), importedName, StringComparison.OrdinalIgnoreCase));
         if (existing is null && !string.IsNullOrWhiteSpace(import.SourceKey))
             existing = State.Saves.FirstOrDefault(x => !x.IsDemo && !x.SourceDetached
-                && SameRole(x, ownerId, import.GameAccount, import.Profession) && x.SourceKey == import.SourceKey);
+                && SameRole(x, ownerId, import.GameAccount, import.Profession)
+                && (x.SourceKey == import.SourceKey || x.IgnoredSourceKeys.Contains(import.SourceKey)));
         if (existing is null) return Mutate(state => CreateImportedSave(state, ownerId, import));
         var saveId = existing.Id;
         return Mutate(state =>
@@ -242,6 +245,7 @@ public sealed class CloudSimulation
     {
         ValidateImport(import);
         var save = GetSave(State, ownerId, localSaveId);
+        if (save.IsIgnored) throw new InvalidOperationException("这份存档已忽略，未接收云端更新。");
         if (!SameRole(save, ownerId, import.GameAccount, import.Profession))
             throw new InvalidOperationException("云内容与当前角色身份不匹配，未应用。");
         if (goals is not null && (goals.Any(x => x is null || string.IsNullOrWhiteSpace(x.ItemId) || string.IsNullOrWhiteSpace(x.ItemName) || x.Quantity <= 0)
@@ -312,6 +316,65 @@ public sealed class CloudSimulation
         return State.Saves.FirstOrDefault(x => x.OwnerId == ownerId && (x.SourceHash == sourceHash || !x.SourceDetached && x.AcceptedSourceHash == sourceHash));
     }
 
+    public bool IsIgnoredImport(string ownerId, CloudImportSave import) => State.Saves.Any(save => save.IsIgnored
+        && SameRole(save, ownerId, import.GameAccount, import.Profession)
+        && ((!string.IsNullOrEmpty(import.SourceKey) && (save.SourceKey == import.SourceKey || save.IgnoredSourceKeys.Contains(import.SourceKey)))
+            || string.Equals(save.Name.Trim(), ImportedName(import), StringComparison.OrdinalIgnoreCase)));
+
+    public bool IsIgnoredSource(string sourcePath, string gameAccount, JsonObject parsed)
+    {
+        if (parsed["kind"]?.ToString() != "character") return false;
+        var key = SaveArchiveService.BuildLogicalSourceKey(sourcePath, gameAccount, parsed);
+        return State.Saves.Any(save => save.OwnerId == PreviewOwnerId && save.IsIgnored && save.GameAccount == gameAccount
+            && (save.SourceKey == key || save.IgnoredSourceKeys.Contains(key)));
+    }
+
+    public void SetIgnored(string ownerId, string saveId, bool ignored)
+    {
+        if (GetSave(State, ownerId, saveId).IsIgnored == ignored) return;
+        Mutate(state =>
+        {
+            var save = GetSave(state, ownerId, saveId);
+            save.IsIgnored = ignored;
+            if (ignored && save.SourceKey.Length > 0 && !save.IgnoredSourceKeys.Contains(save.SourceKey))
+                save.IgnoredSourceKeys.Add(save.SourceKey);
+            if (ignored) save.IsMain = false;
+            save.SyncEnabled = false;
+            save.LastSyncStatus = "停止同步";
+            save.LastSyncError = "";
+            // Simulated snapshots retain their codes, goals and main identity, as real cloud slots do.
+            foreach (var snapshot in state.Snapshots.Where(x => x.OwnerId == ownerId && x.SaveId == saveId))
+            { snapshot.SyncEnabled = false; snapshot.LastSyncStatus = "停止同步"; }
+            return true;
+        }, ignored ? "忽略本地存档" : "恢复已忽略存档");
+    }
+
+    // A witnessed rename follows this file only. No content-hash or profession-wide guessing.
+    public void TrackIgnoredSourceRename(string oldPath, string newPath)
+    {
+        var oldName = Path.GetFileName(oldPath).ToUpperInvariant();
+        var newName = Path.GetFileName(newPath).ToUpperInvariant();
+        var changes = new Dictionary<string, string>();
+        foreach (var save in State.Saves.Where(x => x.IsIgnored && x.OwnerId == PreviewOwnerId))
+            foreach (var key in save.IgnoredSourceKeys.Append(save.SourceKey).Distinct())
+                try
+                {
+                    var parts = JsonSerializer.Deserialize<string[]>(key);
+                    if (parts is not { Length: 4 } || parts[0] != oldName) continue;
+                    parts[0] = newName;
+                    var next = JsonSerializer.Serialize(parts);
+                    if (!save.IgnoredSourceKeys.Contains(next)) changes[save.Id] = next;
+                }
+                catch (JsonException) { }
+        if (changes.Count == 0) return;
+        Mutate(state =>
+        {
+            foreach (var save in state.Saves)
+                if (changes.TryGetValue(save.Id, out var key)) save.IgnoredSourceKeys.Add(key);
+            return true;
+        });
+    }
+
     public CloudSave DuplicateSave(string ownerId, string saveId, string? displayName = null)
     {
         return Mutate(state =>
@@ -323,6 +386,7 @@ public sealed class CloudSimulation
                 string.IsNullOrWhiteSpace(displayName) ? SaveNamePolicy.WithSuffix(original.Name, "_副档")
                     : SaveNamePolicy.NewNameBase(displayName.Trim()), isMain: false);
             copy.IsMain = false;
+            copy.IsIgnored = false; copy.IgnoredSourceKeys.Clear();
             copy.IsFavorite = false;
             copy.SyncEnabled = false;
             copy.SourceKey = "";
@@ -362,6 +426,7 @@ public sealed class CloudSimulation
         Mutate(state =>
         {
             var selected = GetSave(state, ownerId, saveId);
+            if (selected.IsIgnored) throw new InvalidOperationException("请先恢复这份已忽略存档。");
             foreach (var save in state.Saves.Where(x => SameRole(x, selected)))
             {
                 var isMain = save.Id == saveId;
@@ -382,6 +447,7 @@ public sealed class CloudSimulation
         Mutate(state =>
         {
             var selected = GetSave(state, ownerId, saveId);
+            if (selected.IsIgnored) throw new InvalidOperationException("请先恢复这份已忽略存档。");
             if (selected.IsMain) return true;
             var roleSaves = state.Saves.Where(x => SameRole(x, selected)).ToList();
             foreach (var save in roleSaves)
@@ -411,6 +477,7 @@ public sealed class CloudSimulation
         Mutate(state =>
         {
             var save = GetSave(state, ownerId, saveId);
+            if (enabled && save.IsIgnored) throw new InvalidOperationException("已忽略的存档不能开启同步，请先恢复。");
             save.SyncEnabled = enabled;
             save.LastSyncStatus = enabled ? (IsDirty(state, save) ? "待同步" : "已同步") : "未启用";
             save.LastSyncError = "";
@@ -427,6 +494,7 @@ public sealed class CloudSimulation
         Mutate(state =>
         {
             var save = GetSave(state, ownerId, saveId);
+            if (save.IsIgnored) throw new InvalidOperationException("请先恢复已忽略存档，再调整目标。");
             var target = save.Targets.FirstOrDefault(x => x.ItemId == itemId);
             if (target is null) save.Targets.Add(new CloudGoal { ItemId = itemId, ItemName = name, Quantity = quantity });
             else { target.Quantity = quantity; target.ItemName = name; }
@@ -443,6 +511,24 @@ public sealed class CloudSimulation
             if (save.Targets.RemoveAll(x => x.ItemId == itemId) > 0) MarkChanged(save);
             return true;
         });
+    }
+
+    public void ReorderTargets(string ownerId, string saveId, IReadOnlyList<string> itemIds)
+    {
+        var current = GetSave(State, ownerId, saveId);
+        if (current.IsIgnored) throw new InvalidOperationException("请先恢复这份已忽略存档。");
+        if (itemIds.Count != current.Targets.Count || itemIds.Distinct(StringComparer.Ordinal).Count() != itemIds.Count
+            || !itemIds.ToHashSet(StringComparer.Ordinal).SetEquals(current.Targets.Select(x => x.ItemId)))
+            throw new InvalidOperationException("目标列表已变化，请刷新后重试拖动。");
+        if (current.Targets.Select(x => x.ItemId).SequenceEqual(itemIds)) return;
+        Mutate(state =>
+        {
+            var save = GetSave(state, ownerId, saveId);
+            var targets = save.Targets.ToDictionary(x => x.ItemId, StringComparer.Ordinal);
+            save.Targets = itemIds.Select(id => targets[id]).ToList();
+            // Presentation ordering is local. Cloud fingerprints already sort goals by ID.
+            return true;
+        }, "调整目标顺序");
     }
 
     public void SetDemoInventory(string ownerId, string saveId, string itemId, int quantity)
@@ -467,6 +553,7 @@ public sealed class CloudSimulation
     public string GetSyncStatus(string ownerId, string saveId)
     {
         var save = GetSave(State, ownerId, saveId);
+        if (save.IsIgnored || !save.SyncEnabled && save.LastSyncStatus == "停止同步") return "停止同步";
         if (!save.SyncEnabled) return "未启用";
         if (save.LastSyncStatus == "失败") return "失败";
         return IsDirty(State, save) ? "待同步" : "已同步";
@@ -549,8 +636,9 @@ public sealed class CloudSimulation
                 // part of the SAME successful transaction, even for an unselected old slot.
                 foreach (var role in saves.GroupBy(x => (x.GameAccount, x.Profession)))
                 {
-                    var main = state.Saves.Single(x => x.OwnerId == ownerId && x.GameAccount == role.Key.GameAccount
+                    var main = state.Saves.SingleOrDefault(x => x.OwnerId == ownerId && x.GameAccount == role.Key.GameAccount
                         && x.Profession == role.Key.Profession && x.IsMain);
+                    if (main is null) continue; // Ignoring a local main never silently withdraws or replaces a cloud main.
                     foreach (var snapshot in state.Snapshots.Where(x => SameRole(x, main)))
                     {
                         var isMain = snapshot.SaveId == main.Id;
@@ -695,7 +783,7 @@ public sealed class CloudSimulation
             state.Snapshots.RemoveAll(x => x.IsDemo || ids.Contains(x.SaveId));
             state.Saves.RemoveAll(x => ids.Contains(x.Id));
             foreach (var role in state.Saves.GroupBy(x => (x.OwnerId, x.GameAccount, x.Profession)))
-                if (!role.Any(x => x.IsMain)) role.First().IsMain = true;
+                if (!role.Any(x => x.IsMain || x.IsIgnored || x.IgnoredSourceKeys.Count > 0)) role.First().IsMain = true;
             return ids.Count;
         });
     }
@@ -868,8 +956,10 @@ public sealed class CloudSimulation
                 throw new InvalidOperationException("云端副档不能持有公开装备目标。");
             if (save.IsDemo && save.MapVersion != DemoMapVersion) throw new InvalidOperationException("示范存档不能使用真实地图配方版本。");
         }
-        if (state.Saves.GroupBy(x => (x.OwnerId, x.GameAccount, x.Profession)).Any(x => x.Count(s => s.IsMain) != 1))
-            throw new InvalidOperationException("每个本地角色必须且只能有一个主档。");
+        if (state.Saves.Any(x => x.IsIgnored && (x.IsMain || x.SyncEnabled)))
+            throw new InvalidOperationException("已忽略存档不能作为主档或开启同步。");
+        if (state.Saves.GroupBy(x => (x.OwnerId, x.GameAccount, x.Profession)).Any(x => x.Count(s => s.IsMain) > 1))
+            throw new InvalidOperationException("每个本地角色最多只能有一个主档。");
         if (enforceUniqueNames && !SaveNamePolicy.AreUnique(state.Saves))
             throw new InvalidOperationException("同一角色的主副档名称必须能够区分。");
         if (state.Snapshots.GroupBy(x => (x.OwnerId, x.GameAccount, x.Profession)).Any(x => x.Count(s => s.IsMain) > 1))

@@ -34,6 +34,9 @@ public class CloudSave
     public bool IsMain { get; set; }
     // A local picker preference, independent of cloud content and its revision.
     public bool IsFavorite { get; set; }
+    // Local opt-out: retain history/media/targets but do not ingest or synchronize this branch.
+    public bool IsIgnored { get; set; }
+    public List<string> IgnoredSourceKeys { get; set; } = [];
     public bool SyncEnabled { get; set; }
     public bool IsDemo { get; set; }
     public string MapVersion { get; set; } = "";

@@ -13,7 +13,7 @@ public partial class AboutWindow : Window
         InitializeComponent();
         Title = "关于" + DesktopEdition.WindowTitle;
         AboutTitleText.Text = DesktopEdition.WindowTitle;
-        AboutVersionText.Text = "应用 0.1.8 · 地图 TWRPG 0.94a";
+        AboutVersionText.Text = "应用 0.1.9 · 地图 TWRPG 0.94a";
     }
     private void Reference_RequestNavigate(object sender, RequestNavigateEventArgs e)
     {

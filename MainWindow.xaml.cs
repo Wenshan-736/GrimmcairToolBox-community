@@ -34,7 +34,7 @@ public partial class MainWindow : Window
         Title = DesktopEdition.WindowTitle;
         EditionTitleText.Text = DesktopEdition.SidebarTitle;
         System.Windows.Automation.AutomationProperties.SetName(AboutButton, "关于" + DesktopEdition.WindowTitle);
-        ApplicationVersionText.Text = "应用版本 · 0.1.8";
+        ApplicationVersionText.Text = "应用版本 · 0.1.9";
         if (DesktopEdition.IsCommunity)
         {
             DesktopAccountPanel.Visibility = Visibility.Collapsed;
@@ -70,7 +70,9 @@ public partial class MainWindow : Window
         {
             DesktopDiagnostics.Mark(DesktopDiagnosticStage.InitializationStarted);
             StatusText.Text = "正在读取本地图鉴……";
-            var data = await Task.Run(() => ResourcePack.ReadText("catalog.json"));
+            var loaded = await Task.Run(() =>
+            {
+            var data = ResourcePack.ReadText("catalog.json");
             var root = JsonNode.Parse(data)!.AsObject();
             CatalogItem ReadItem(JsonNode? n)
             {
@@ -97,11 +99,19 @@ public partial class MainWindow : Window
                     IconPath = icon
                 };
             }
-            _catalog = root["items"]!.AsArray().Select(ReadItem).OrderByDescending(i => i.StageRank).ThenBy(i => i.Name, StringComparer.CurrentCulture).ToList();
-            _byId = (root["lookupItems"] ?? root["items"])!.AsArray().Select(ReadItem).ToDictionary(i => i.Id, StringComparer.Ordinal);
-            InitializeEquipmentGuide();
-            InitializeGuides();
-            _decoder = await Task.Run(() => new SaveDecoder());
+            var catalog = root["items"]!.AsArray().Select(ReadItem).OrderByDescending(i => i.StageRank).ThenBy(i => i.Name, StringComparer.CurrentCulture).ToList();
+            var known = catalog.ToDictionary(i => i.Id, StringComparer.Ordinal);
+            var lookup = (root["lookupItems"] ?? root["items"])!.AsArray()
+                .Select(n => known.GetValueOrDefault(n!["id"]!.ToString()) ?? ReadItem(n)).ToDictionary(i => i.Id, StringComparer.Ordinal);
+            return (catalog, lookup, equipment: EquipmentGuideCatalog.Load(), guide: GuideCatalog.Load(), concepts: ConceptCatalog.Load(), decoder: new SaveDecoder());
+            });
+            if (_closing || _closed) return;
+            _catalog = loaded.catalog;
+            _byId = loaded.lookup;
+            InitializeEquipmentGuide(loaded.equipment);
+            InitializeGuides(loaded.guide, loaded.concepts);
+            _decoder = loaded.decoder;
+            InitializeEquipmentStages();
             DesktopDiagnostics.Mark(DesktopDiagnosticStage.ResourcesLoaded);
             _ready = true;
             InitializeSimulation();
@@ -112,6 +122,7 @@ public partial class MainWindow : Window
             {
                 DesktopDiagnostics.Mark(DesktopDiagnosticStage.CloudInitializationStarted);
                 await InitializeDesktopApiAsync();
+                if (_closing || _closed) return;
                 await InitializeArchivesAsync();
                 DesktopDiagnostics.Mark(DesktopDiagnosticStage.ArchivesLoaded);
             }
@@ -132,8 +143,10 @@ public partial class MainWindow : Window
         var terms = SearchBox.Text.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
         var category = CategoryBox.SelectedItem is ContentControl c ? c.Content?.ToString() : CategoryBox.SelectedItem?.ToString();
         var selected = (EquipmentList.SelectedItem as CatalogItem)?.Id;
+        var stage = EquipmentStageBox.SelectedItem as EquipmentStageChoice;
         var items = _catalog.Where(i => (string.IsNullOrEmpty(category) || category == "全部" ||
             (category == "目标" ? _targets.Contains(i.Id) : i.Category == category || i.Subcategory == category))
+            && (stage?.Value is null || i.Stage == stage.Value)
             && terms.All(t => (i.Name + " " + i.Id + " " + i.SearchText + " " + i.Description + " " + i.EffectsText + " " + _badgeBonuses.GetValueOrDefault(i.Id)
                 + " " + _equipmentExplanationSearch.GetValueOrDefault(i.Id)).Contains(t, StringComparison.OrdinalIgnoreCase))).ToList();
         EquipmentList.ItemsSource = items;
@@ -158,6 +171,18 @@ public partial class MainWindow : Window
 
     private void SearchBox_TextChanged(object sender, TextChangedEventArgs e) => FilterEquipment();
     private void CategoryBox_SelectionChanged(object sender, SelectionChangedEventArgs e) => FilterEquipment();
+    private sealed record EquipmentStageChoice(string? Value, string Label);
+    private void InitializeEquipmentStages()
+    {
+        var stages = _catalog.Where(i => !string.IsNullOrWhiteSpace(i.Stage)).GroupBy(i => i.Stage)
+            .OrderByDescending(g => g.Max(i => i.StageRank)).Select(g => new EquipmentStageChoice(g.Key, g.Key)).ToList();
+        stages.Insert(0, new(null, "全部阶段"));
+        if (_catalog.Any(i => string.IsNullOrWhiteSpace(i.Stage))) stages.Add(new("", "未标注阶段"));
+        EquipmentStageBox.ItemsSource = stages;
+        EquipmentStageBox.DisplayMemberPath = nameof(EquipmentStageChoice.Label);
+        EquipmentStageBox.SelectedIndex = 0;
+    }
+    private void EquipmentStageBox_SelectionChanged(object sender, SelectionChangedEventArgs e) => FilterEquipment();
     private void EquipmentList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (EquipmentList.SelectedItem is not CatalogItem item) return;
@@ -340,6 +365,8 @@ public partial class MainWindow : Window
     {
         var displayId = _byId.GetValueOrDefault(id)?.DisplayId ?? id;
         var item = _catalog.FirstOrDefault(i => i.Id == displayId);
+        if (item is not null && EquipmentStageBox.SelectedItem is EquipmentStageChoice { Value: not null } stage && item.Stage != stage.Value)
+            EquipmentStageBox.SelectedIndex = 0;
         if (item is not null) { EquipmentList.SelectedItem = item; EquipmentList.ScrollIntoView(item); }
     }
 

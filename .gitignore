@@ -10,6 +10,7 @@ Internal/
 UserData/
 AiPreviewData/
 KnowledgePreviewData/
+Preview019Data/
 Dependencies/*
 !Dependencies/README.md
 Data/*

@@ -15,10 +15,11 @@ public partial class MainWindow
         var id = remote["saveId"]!.ToString();
         var role = remote["isMain"]?.GetValue<bool>() == true ? "云主档" : "云副档";
         var linked = _desktopSync?.Account.Bindings.Any(binding => binding.SaveId == id && !binding.Deleted && binding.CloudRevision > 0 && !binding.LocalSaveId.StartsWith("remote:", StringComparison.Ordinal)) == true;
+        var stopped = remote["syncEnabled"]?.GetValue<bool>() == false;
         var timestamp = DateTimeOffset.TryParse(remote["syncedAt"]?.ToString(), out var time)
             ? time.ToOffset(TimeSpan.FromHours(8)).ToString("MM-dd HH:mm:ss") : "时间待确认";
         return $"{remote["gameAccount"]} · {RemoteProfessionName(remote["professionId"]?.ToString())} · {remote["saveName"]}"
-            + (duplicate > 0 ? $"（同名{duplicate}）" : "") + $" · {role} · {timestamp}" + (linked ? " · 已关联本机" : "");
+            + (duplicate > 0 ? $"（同名{duplicate}）" : "") + $" · {role} · {timestamp}" + (linked ? " · 已关联本机" : "") + (stopped ? " · 停止同步" : "");
     }
 
     private async Task<bool> ChooseExistingCloudForEnableAsync(CloudSave local)
@@ -45,7 +46,7 @@ public partial class MainWindow
     private async Task<bool> ChooseExistingLocalForEnableAsync(CloudSave local)
     {
         if (RemoteSave(local.Id) is not null) return false;
-        var candidates = _simulation!.State.Saves.Where(other => other.OwnerId == local.OwnerId && !other.IsDemo && other.Id != local.Id
+        var candidates = _simulation!.State.Saves.Where(other => other.OwnerId == local.OwnerId && !other.IsDemo && !other.IsIgnored && other.Id != local.Id
             && other.GameAccount == local.GameAccount && other.Profession == local.Profession
             && string.Equals(other.Name.Trim(), local.Name.Trim(), StringComparison.OrdinalIgnoreCase)
             && _desktopSync!.Account.Bindings.Any(binding => binding.LocalSaveId == other.Id)).ToList();
